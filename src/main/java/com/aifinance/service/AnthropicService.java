@@ -37,7 +37,7 @@ public class AnthropicService {
         }
 
         Map<String, Object> requestBody = Map.of(
-                "model", "claude-opus-4-8",
+                "model", agent.model() != null && !agent.model().isBlank() ? agent.model() : "claude-sonnet-4-6",
                 "max_tokens", 4096,
                 "system", agent.systemPrompt(),
                 "messages", List.of(Map.of("role", "user", "content", userMessage)),

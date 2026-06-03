@@ -2,9 +2,10 @@ package com.aifinance.controller;
 
 import com.aifinance.model.AgencyAgent;
 import com.aifinance.model.AgencyChatRequest;
+import com.aifinance.model.AgentDefinition;
 import com.aifinance.service.AgencyAgentService;
 import com.aifinance.service.AnthropicService;
-import com.aifinance.model.AgentDefinition;
+import com.aifinance.service.OpenAICompatService;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.*;
@@ -19,11 +20,14 @@ public class AgencyAgentController {
 
     private final AgencyAgentService agencyAgentService;
     private final AnthropicService anthropicService;
+    private final OpenAICompatService openAICompatService;
 
     public AgencyAgentController(AgencyAgentService agencyAgentService,
-                                  AnthropicService anthropicService) {
+                                  AnthropicService anthropicService,
+                                  OpenAICompatService openAICompatService) {
         this.agencyAgentService = agencyAgentService;
         this.anthropicService = anthropicService;
+        this.openAICompatService = openAICompatService;
     }
 
     @GetMapping("/agents")
@@ -43,15 +47,20 @@ public class AgencyAgentController {
         AgencyAgent agent = agencyAgentService.findById(request.agencyAgentId())
                 .orElseThrow(() -> new IllegalArgumentException("Agent not found: " + request.agencyAgentId()));
 
-        // Wrap into AgentDefinition-compatible call via system prompt
+        String model = request.model() != null && !request.model().isBlank()
+                ? request.model() : "claude-sonnet-4-6";
+
         var agentDef = new AgentDefinition(
                 agent.id(), agent.name(), agent.description(), agent.descriptionZh(),
                 agent.category(), agent.color(), agent.systemPrompt(),
-                List.of(), "", "claude-sonnet-4-6", List.of()
+                List.of(), "", model, List.of()
         );
 
-        return anthropicService.streamChat(agentDef, request.message(), request.apiKey())
-                .map(chunk -> ServerSentEvent.<String>builder().data(chunk).build());
+        Flux<String> stream = model.startsWith("claude-")
+                ? anthropicService.streamChat(agentDef, request.message(), request.apiKey())
+                : openAICompatService.streamChat(agentDef, request.message(), model);
+
+        return stream.map(chunk -> ServerSentEvent.<String>builder().data(chunk).build());
     }
 
     @GetMapping("/stats")

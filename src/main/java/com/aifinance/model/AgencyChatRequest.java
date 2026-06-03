@@ -1,3 +1,3 @@
 package com.aifinance.model;
 
-public record AgencyChatRequest(String agencyAgentId, String message, String apiKey) {}
+public record AgencyChatRequest(String agencyAgentId, String message, String apiKey, String model) {}
