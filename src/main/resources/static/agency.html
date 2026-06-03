@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agency Agents</title>
+  <style>
+    :root {
+      --bg:#F7F5F0;--surface:#FFFFFF;--surface-alt:#FBFAF7;
+      --text:#26262B;--text-secondary:#55555F;--text-muted:#8A8A95;
+      --border:#E4E0D8;--border-strong:#D2CDC2;
+      --accent:#7c3aed;--accent-hover:#6d28d9;
+      --success:#1F7A4D;--warning:#B45309;--danger:#B42318;
+      --shadow:0 1px 3px rgba(30,30,40,.06),0 4px 12px rgba(30,30,40,.05);
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+
+    /* Header */
+    header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;height:52px;display:flex;align-items:center;gap:12px;flex-shrink:0;}
+    .back-btn{display:flex;align-items:center;gap:5px;text-decoration:none;color:var(--text-muted);font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg);}
+    .header-logo{width:28px;height:28px;background:#7c3aed;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;}
+    .header-title{font-size:15px;font-weight:700;color:var(--text);}
+    .header-sub{font-size:12px;color:var(--text-muted);}
+    .header-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+    .api-input{width:220px;padding:5px 10px;border:1px solid var(--border-strong);border-radius:7px;font-size:12px;color:var(--text);background:var(--bg);outline:none;}
+    .api-input:focus{border-color:var(--accent);}
+    .status-badge{display:flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:500;background:#fef3c7;color:var(--warning);border:1px solid #fde68a;}
+    .status-badge.live{background:#f0fdf4;color:var(--success);border-color:#bbf7d0;}
+    .status-dot{width:6px;height:6px;border-radius:50%;background:currentColor;}
+
+    /* Layout */
+    .app-body{display:flex;flex:1;overflow:hidden;}
+
+    /* Sidebar */
+    aside{width:200px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;}
+    .sidebar-search{padding:10px 10px 8px;border-bottom:1px solid var(--border);}
+    .search-input{width:100%;padding:7px 10px;border:1px solid var(--border-strong);border-radius:7px;font-size:12px;color:var(--text);background:var(--bg);outline:none;}
+    .search-input:focus{border-color:var(--accent);}
+    .category-list{overflow-y:auto;flex:1;padding:6px;}
+    .cat-item{display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:6px;cursor:pointer;font-size:12px;color:var(--text-secondary);transition:background 0.1s;}
+    .cat-item:hover,.cat-item.active{background:var(--bg);}
+    .cat-item.active{color:var(--accent);font-weight:600;}
+    .cat-count{font-size:10px;color:var(--text-muted);background:var(--bg);padding:1px 5px;border-radius:10px;}
+
+    /* Agent Grid */
+    .grid-panel{flex:1;overflow-y:auto;padding:16px;}
+    .grid-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+    .grid-title{font-size:13px;font-weight:600;color:var(--text);}
+    .grid-count{font-size:12px;color:var(--text-muted);}
+    .agents-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;}
+    .agent-tile{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;transition:all 0.12s;box-shadow:var(--shadow);}
+    .agent-tile:hover{border-color:var(--border-strong);transform:translateY(-1px);}
+    .agent-tile.selected{border-color:#7c3aed;background:#faf5ff;}
+    .tile-top{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+    .tile-emoji{font-size:20px;line-height:1;}
+    .tile-name{font-size:13px;font-weight:600;color:var(--text);line-height:1.3;}
+    .tile-cat{font-size:10px;color:var(--text-muted);margin-top:2px;}
+    .tile-vibe{font-size:11px;color:var(--text-secondary);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+
+    /* Chat Panel */
+    .chat-panel{width:400px;border-left:1px solid var(--border);background:var(--surface);display:flex;flex-direction:column;flex-shrink:0;}
+    .chat-panel.hidden{display:none;}
+    .chat-header{padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0;}
+    .chat-agent-name{font-size:14px;font-weight:700;color:var(--text);}
+    .chat-agent-cat{font-size:11px;color:var(--text-muted);margin-top:2px;}
+    .chat-messages{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:12px;}
+    .msg{max-width:100%;}
+    .msg-bubble{padding:9px 12px;border-radius:10px;font-size:13px;line-height:1.6;white-space:pre-wrap;}
+    .msg.user .msg-bubble{background:var(--accent);color:#fff;border-bottom-right-radius:3px;margin-left:20px;}
+    .msg.assistant .msg-bubble{background:var(--bg);border:1px solid var(--border);border-bottom-left-radius:3px;}
+    .msg-meta{font-size:10px;color:var(--text-muted);margin-top:3px;padding:0 3px;}
+    .msg.user .msg-meta{text-align:right;}
+    .typing-indicator{display:flex;gap:4px;padding:10px 12px;background:var(--bg);border:1px solid var(--border);border-radius:10px;border-bottom-left-radius:3px;width:fit-content;}
+    .t-dot{width:5px;height:5px;border-radius:50%;background:var(--text-muted);animation:ty 1.2s infinite;}
+    .t-dot:nth-child(2){animation-delay:.2s;}
+    .t-dot:nth-child(3){animation-delay:.4s;}
+    @keyframes ty{0%,60%,100%{opacity:.3;transform:translateY(0);}30%{opacity:1;transform:translateY(-3px);}}
+    .chat-input-area{padding:10px 12px 12px;border-top:1px solid var(--border);flex-shrink:0;}
+    .chat-textarea{width:100%;padding:8px 11px;border:1px solid var(--border-strong);border-radius:8px;font-size:12.5px;color:var(--text);background:var(--bg);outline:none;resize:none;min-height:38px;max-height:100px;font-family:inherit;line-height:1.5;}
+    .chat-textarea:focus{border-color:var(--accent);}
+    .input-row{display:flex;gap:8px;margin-top:7px;}
+    .send-btn{padding:7px 14px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;transition:background .15s;}
+    .send-btn:hover:not(:disabled){background:var(--accent-hover);}
+    .send-btn:disabled{opacity:.5;cursor:not-allowed;}
+    .clear-btn{padding:7px 10px;background:var(--bg);color:var(--text-secondary);border:1px solid var(--border);border-radius:7px;font-size:12px;cursor:pointer;}
+    .empty-chat{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text-muted);text-align:center;padding:24px;gap:8px;}
+    .empty-chat .big-emoji{font-size:32px;opacity:.3;}
+
+    ::-webkit-scrollbar{width:5px;}
+    ::-webkit-scrollbar-track{background:transparent;}
+    ::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:3px;}
+  </style>
+</head>
+<body>
+
+<header>
+  <a href="/index.html" class="back-btn">← Hub</a>
+  <div class="header-logo">🤖</div>
+  <div>
+    <div class="header-title">Agency Agents</div>
+    <div class="header-sub" id="headerSub">加载中…</div>
+  </div>
+  <div class="header-right">
+    <input class="api-input" type="password" id="apiKeyInput" placeholder="Anthropic API Key" autocomplete="off">
+    <div class="status-badge" id="statusBadge">
+      <div class="status-dot"></div><span id="statusText">未连接</span>
+    </div>
+  </div>
+</header>
+
+<div class="app-body">
+  <aside>
+    <div class="sidebar-search">
+      <input class="search-input" id="searchInput" placeholder="搜索 Agent…" oninput="filterAgents()">
+    </div>
+    <div class="category-list" id="categoryList"></div>
+  </aside>
+
+  <div class="grid-panel">
+    <div class="grid-header">
+      <span class="grid-title" id="gridTitle">全部 Agents</span>
+      <span class="grid-count" id="gridCount"></span>
+    </div>
+    <div class="agents-grid" id="agentsGrid">
+      <div style="padding:20px;color:var(--text-muted);font-size:13px;">加载中…</div>
+    </div>
+  </div>
+
+  <div class="chat-panel hidden" id="chatPanel">
+    <div class="chat-header">
+      <div class="chat-agent-name" id="chatAgentName">—</div>
+      <div class="chat-agent-cat" id="chatAgentCat">—</div>
+    </div>
+    <div class="chat-messages" id="chatMessages">
+      <div class="empty-chat">
+        <div class="big-emoji">💬</div>
+        <div>输入消息开始对话</div>
+      </div>
+    </div>
+    <div class="chat-input-area">
+      <textarea class="chat-textarea" id="chatInput" placeholder="输入指令…（Enter 发送，Shift+Enter 换行）" rows="1"
+        onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+      <div class="input-row">
+        <button class="send-btn" id="sendBtn" onclick="sendMessage()">发送</button>
+        <button class="clear-btn" onclick="clearChat()">清空</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let allAgents = [];
+let filtered = [];
+let selectedCategory = 'all';
+let selectedAgent = null;
+let history = {};
+let streaming = false;
+
+document.addEventListener('DOMContentLoaded', async () => {
+  loadKey();
+  await loadAgents();
+  document.getElementById('apiKeyInput').addEventListener('change', onKeyChange);
+  document.getElementById('apiKeyInput').addEventListener('input', debounce(onKeyChange, 700));
+});
+
+function loadKey() {
+  const k = localStorage.getItem('anthropic_api_key');
+  if (k) { document.getElementById('apiKeyInput').value = k; checkHealth(); }
+}
+
+function onKeyChange() {
+  const k = document.getElementById('apiKeyInput').value.trim();
+  k ? localStorage.setItem('anthropic_api_key', k) : localStorage.removeItem('anthropic_api_key');
+  checkHealth();
+}
+
+async function checkHealth() {
+  const k = document.getElementById('apiKeyInput').value.trim();
+  try {
+    const r = await fetch('/api/health', { headers: k ? { 'X-Api-Key': k } : {} });
+    const d = await r.json();
+    const badge = document.getElementById('statusBadge');
+    const text = document.getElementById('statusText');
+    badge.className = 'status-badge' + (d.apiKeyConfigured ? ' live' : '');
+    text.textContent = d.apiKeyConfigured ? '已连接' : '未连接';
+  } catch {}
+}
+
+async function loadAgents() {
+  try {
+    const r = await fetch('/api/agency/agents');
+    allAgents = await r.json();
+    allAgents.sort((a, b) => a.categoryDisplayName.localeCompare(b.categoryDisplayName) || a.name.localeCompare(b.name));
+    document.getElementById('headerSub').textContent = `${allAgents.length} Agents · 15 类`;
+    buildCategoryList();
+    filterAgents();
+  } catch (e) {
+    document.getElementById('agentsGrid').innerHTML = '<div style="color:var(--danger);padding:20px;font-size:13px">加载失败，请刷新</div>';
+  }
+}
+
+function buildCategoryList() {
+  const counts = {};
+  allAgents.forEach(a => { counts[a.categoryDisplayName] = (counts[a.categoryDisplayName] || 0) + 1; });
+  const sorted = Object.entries(counts).sort((a, b) => a[0].localeCompare(b[0]));
+  let html = `<div class="cat-item active" data-cat="all" onclick="setCategory('all')">
+    全部 <span class="cat-count">${allAgents.length}</span></div>`;
+  sorted.forEach(([cat, cnt]) => {
+    html += `<div class="cat-item" data-cat="${cat}" onclick="setCategory('${cat}')">
+      ${cat} <span class="cat-count">${cnt}</span></div>`;
+  });
+  document.getElementById('categoryList').innerHTML = html;
+}
+
+function setCategory(cat) {
+  selectedCategory = cat;
+  document.querySelectorAll('.cat-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.cat === cat);
+  });
+  filterAgents();
+}
+
+function filterAgents() {
+  const q = document.getElementById('searchInput').value.toLowerCase().trim();
+  filtered = allAgents.filter(a => {
+    const matchCat = selectedCategory === 'all' || a.categoryDisplayName === selectedCategory;
+    const matchQ = !q || a.name.toLowerCase().includes(q) || a.description.toLowerCase().includes(q) || (a.vibe || '').toLowerCase().includes(q);
+    return matchCat && matchQ;
+  });
+  renderGrid();
+}
+
+function renderGrid() {
+  const title = selectedCategory === 'all' ? '全部 Agents' : selectedCategory;
+  document.getElementById('gridTitle').textContent = title;
+  document.getElementById('gridCount').textContent = `${filtered.length} 个`;
+  if (!filtered.length) {
+    document.getElementById('agentsGrid').innerHTML = '<div style="padding:20px;color:var(--text-muted);font-size:13px">无匹配结果</div>';
+    return;
+  }
+  document.getElementById('agentsGrid').innerHTML = filtered.map(a => `
+    <div class="agent-tile${selectedAgent?.id === a.id ? ' selected' : ''}" onclick="selectAgent('${escId(a.id)}')">
+      <div class="tile-top">
+        <span class="tile-emoji">${a.emoji || '🤖'}</span>
+        <div>
+          <div class="tile-name">${esc(a.name)}</div>
+          <div class="tile-cat">${a.categoryDisplayName}</div>
+        </div>
+      </div>
+      <div class="tile-vibe">${esc(a.vibe || a.description)}</div>
+    </div>`).join('');
+}
+
+function selectAgent(id) {
+  if (streaming) return;
+  const decoded = id.replace(/__SLASH__/g, '/');
+  selectedAgent = allAgents.find(a => a.id === decoded);
+  if (!selectedAgent) return;
+  document.querySelectorAll('.agent-tile').forEach(el => el.classList.remove('selected'));
+  const tileId = escId(decoded);
+  document.querySelectorAll('.agent-tile').forEach(el => {
+    el.classList.toggle('selected', el.getAttribute('onclick')?.includes(tileId));
+  });
+  document.getElementById('chatPanel').classList.remove('hidden');
+  document.getElementById('chatAgentName').textContent = selectedAgent.name;
+  document.getElementById('chatAgentCat').textContent = selectedAgent.categoryDisplayName;
+  renderHistory();
+}
+
+function renderHistory() {
+  const msgs = history[selectedAgent?.id] || [];
+  const area = document.getElementById('chatMessages');
+  if (!msgs.length) {
+    area.innerHTML = `<div class="empty-chat"><div class="big-emoji">${selectedAgent?.emoji || '💬'}</div><div style="font-size:13px;color:var(--text-secondary);font-weight:500">${selectedAgent?.name}</div><div style="font-size:12px;margin-top:4px">${esc(selectedAgent?.vibe || '')}</div></div>`;
+    return;
+  }
+  area.innerHTML = msgs.map(m => `
+    <div class="msg ${m.role}">
+      <div class="msg-bubble">${fmt(m.content)}</div>
+      <div class="msg-meta">${m.role === 'user' ? '你' : selectedAgent.name}</div>
+    </div>`).join('');
+  scrollBottom();
+}
+
+async function sendMessage() {
+  const input = document.getElementById('chatInput');
+  const msg = input.value.trim();
+  if (!msg || streaming || !selectedAgent) return;
+  const key = document.getElementById('apiKeyInput').value.trim();
+  if (!key) { alert('请先填写 Anthropic API Key'); return; }
+
+  addMsg({ role: 'user', content: msg });
+  input.value = ''; autoResize(input);
+  appendMsgDOM({ role: 'user', content: msg });
+
+  // Typing indicator
+  const typId = 'typ-' + Date.now();
+  document.getElementById('chatMessages').insertAdjacentHTML('beforeend',
+    `<div class="msg assistant" id="${typId}"><div class="typing-indicator"><div class="t-dot"></div><div class="t-dot"></div><div class="t-dot"></div></div></div>`);
+  scrollBottom();
+  setStreaming(true);
+
+  let resp = ''; let bubble = null;
+  try {
+    const res = await fetch('/api/agency/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ agencyAgentId: selectedAgent.id, message: msg, apiKey: key })
+    });
+    const reader = res.body.getReader(); const dec = new TextDecoder();
+    let buf = '';
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      const lines = buf.split('\n'); buf = lines.pop();
+      for (const line of lines) {
+        if (!line.startsWith('data:')) continue;
+        const chunk = line.substring(5).trim();
+        if (!chunk || chunk === '[DONE]') continue;
+        if (chunk.startsWith('[ERROR]')) { resp = chunk; break; }
+        resp += chunk;
+        const typEl = document.getElementById(typId);
+        if (typEl) {
+          if (!bubble) { typEl.innerHTML = `<div class="msg-bubble">${fmt(resp)}</div><div class="msg-meta">${selectedAgent.name}</div>`; bubble = typEl.querySelector('.msg-bubble'); }
+          else bubble.innerHTML = fmt(resp);
+          scrollBottom();
+        }
+      }
+    }
+  } catch (e) { resp = '[ERROR] ' + e.message; }
+
+  const typEl = document.getElementById(typId);
+  if (typEl && !bubble) typEl.innerHTML = `<div class="msg-bubble">${fmt(resp || '（无响应）')}</div><div class="msg-meta">${selectedAgent.name}</div>`;
+  if (resp) addMsg({ role: 'assistant', content: resp });
+  setStreaming(false); scrollBottom();
+}
+
+function addMsg(m) {
+  if (!history[selectedAgent.id]) history[selectedAgent.id] = [];
+  history[selectedAgent.id].push(m);
+}
+
+function appendMsgDOM(m) {
+  const area = document.getElementById('chatMessages');
+  const empty = area.querySelector('.empty-chat');
+  if (empty) empty.remove();
+  area.insertAdjacentHTML('beforeend', `<div class="msg ${m.role}"><div class="msg-bubble">${fmt(m.content)}</div><div class="msg-meta">${m.role === 'user' ? '你' : selectedAgent.name}</div></div>`);
+  scrollBottom();
+}
+
+function clearChat() {
+  if (selectedAgent) { history[selectedAgent.id] = []; renderHistory(); }
+}
+
+function setStreaming(v) {
+  streaming = v;
+  const btn = document.getElementById('sendBtn');
+  const inp = document.getElementById('chatInput');
+  if (btn) { btn.disabled = v; btn.textContent = v ? '…' : '发送'; }
+  if (inp) inp.disabled = v;
+}
+
+function scrollBottom() {
+  const a = document.getElementById('chatMessages');
+  if (a) requestAnimationFrame(() => a.scrollTop = a.scrollHeight);
+}
+
+function handleKey(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }
+function autoResize(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 100) + 'px'; }
+function debounce(fn, d) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), d); }; }
+function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function escId(s) { return s.replace(/\//g, '__SLASH__'); }
+function fmt(s) {
+  return esc(s)
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/`(.+?)`/g, '<code style="font-family:monospace;font-size:11px;background:rgba(0,0,0,.06);padding:1px 4px;border-radius:3px">$1</code>')
+    .replace(/^## (.+)$/gm, '<strong style="display:block;margin:6px 0 3px;font-size:13px">$1</strong>')
+    .replace(/^# (.+)$/gm, '<strong style="display:block;margin:8px 0 4px;font-size:14px">$1</strong>')
+    .replace(/^- (.+)$/gm, '• $1');
+}
+</script>
+</body>
+</html>

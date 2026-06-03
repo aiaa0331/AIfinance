@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hermes Agent</title>
+  <style>
+    :root {
+      --bg:#F7F5F0;--surface:#FFFFFF;--surface-alt:#FBFAF7;
+      --text:#26262B;--text-secondary:#55555F;--text-muted:#8A8A95;
+      --border:#E4E0D8;--border-strong:#D2CDC2;
+      --accent:#4c1d95;--accent-light:#7c3aed;
+      --success:#1F7A4D;--warning:#B45309;--danger:#B42318;
+      --shadow:0 1px 3px rgba(30,30,40,.06),0 4px 12px rgba(30,30,40,.05);
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);}
+
+    header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;height:52px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10;box-shadow:var(--shadow);}
+    .back-btn{display:flex;align-items:center;gap:5px;text-decoration:none;color:var(--text-muted);font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg);}
+    .header-logo{width:28px;height:28px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:16px;}
+    .header-title{font-size:15px;font-weight:700;}
+    .header-sub{font-size:12px;color:var(--text-muted);}
+    .header-actions{margin-left:auto;display:flex;align-items:center;gap:10px;}
+    .btn-primary{padding:6px 14px;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;text-decoration:none;background:var(--accent);}
+    .btn-secondary{padding:6px 12px;background:var(--bg);color:var(--text-secondary);border:1px solid var(--border);border-radius:7px;font-size:12px;text-decoration:none;}
+    .status-live{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--success);font-weight:500;}
+    .status-offline{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text-muted);}
+    .dot{width:7px;height:7px;border-radius:50%;background:currentColor;}
+
+    main{max-width:960px;margin:0 auto;padding:36px 28px 64px;}
+
+    /* Hero */
+    .hero{text-align:center;margin-bottom:44px;}
+    .hero-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;background:#f5f3ff;color:var(--accent);font-size:12px;font-weight:600;border:1px solid #ddd6fe;margin-bottom:18px;}
+    .hero h1{font-size:34px;font-weight:800;color:var(--text);letter-spacing:-.03em;margin-bottom:14px;}
+    .hero-desc{font-size:15px;color:var(--text-secondary);line-height:1.7;max-width:600px;margin:0 auto 24px;}
+    .meta-row{display:flex;justify-content:center;gap:36px;}
+    .meta-item{text-align:center;}
+    .meta-num{font-size:22px;font-weight:800;color:var(--text);}
+    .meta-label{font-size:11px;color:var(--text-muted);}
+
+    .section{margin-bottom:36px;}
+    .section-title{font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:8px;}
+
+    /* Features grid */
+    .features-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;}
+    .feature-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;box-shadow:var(--shadow);}
+    .feature-icon{font-size:22px;margin-bottom:8px;}
+    .feature-name{font-size:13px;font-weight:700;color:var(--text);margin-bottom:5px;}
+    .feature-desc{font-size:12px;color:var(--text-secondary);line-height:1.6;}
+
+    /* Plugins */
+    .plugins-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+    .plugin-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px;box-shadow:var(--shadow);position:relative;overflow:hidden;}
+    .plugin-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent);}
+    .plugin-header{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+    .plugin-icon{font-size:20px;}
+    .plugin-name{font-size:14px;font-weight:700;color:var(--text);}
+    .plugin-tag{font-size:10px;color:var(--text-muted);padding:2px 6px;background:var(--bg);border:1px solid var(--border);border-radius:4px;margin-top:2px;display:inline-block;}
+    .plugin-desc{font-size:12px;color:var(--text-secondary);line-height:1.6;}
+
+    /* Config display */
+    .config-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px;box-shadow:var(--shadow);}
+    .config-row{display:flex;align-items:baseline;gap:12px;padding:6px 0;border-bottom:1px solid var(--border);}
+    .config-row:last-child{border-bottom:none;}
+    .config-key{font-size:12px;font-weight:600;color:var(--text);min-width:120px;font-family:monospace;}
+    .config-val{font-size:12px;color:var(--text-secondary);font-family:monospace;}
+    .config-val.highlight{color:var(--accent);font-weight:600;}
+
+    /* Cmd */
+    .cmd-block{background:#1a1a2e;color:#e2e8f0;padding:14px 18px;border-radius:8px;font-family:"SF Mono","Fira Code",monospace;font-size:12.5px;line-height:1.8;}
+    .cmd-block .comment{color:#64748b;}
+    .cmd-block .cmd{color:#a78bfa;}
+    .cmd-block .result{color:#86efac;}
+
+    /* Platforms */
+    .platforms{display:flex;flex-wrap:wrap;gap:8px;}
+    .platform-tag{display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:8px;font-size:12px;font-weight:500;border:1px solid var(--border);background:var(--surface);}
+  </style>
+</head>
+<body>
+
+<header>
+  <a href="/index.html" class="back-btn">← Hub</a>
+  <div class="header-logo">☤</div>
+  <div>
+    <div class="header-title">Hermes Agent</div>
+    <div class="header-sub">Nous Research · Self-Improving AI Agent · v0.10.0</div>
+  </div>
+  <div class="header-actions">
+    <span id="liveStatus" class="status-offline"><span class="dot"></span>检查中…</span>
+    <a href="http://localhost:9119" target="_blank" class="btn-primary">打开 Web UI →</a>
+    <a href="https://github.com/NousResearch/hermes-agent" target="_blank" class="btn-secondary">GitHub</a>
+  </div>
+</header>
+
+<main>
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-badge">☤ Nous Research · Self-Improving</div>
+    <h1>Hermes Agent</h1>
+    <p class="hero-desc">唯一内置学习闭环的 AI Agent——从经验中自动创建技能、会话间持久记忆、自动用户建模。不绑定你的笔记本，可在 VPS/云上随时运行。已配置本地 AI Router + 海关行业专属插件。</p>
+    <div class="meta-row">
+      <div class="meta-item"><div class="meta-num">v0.10.0</div><div class="meta-label">当前版本</div></div>
+      <div class="meta-item"><div class="meta-num">9119</div><div class="meta-label">Web UI 端口</div></div>
+      <div class="meta-item"><div class="meta-num">2</div><div class="meta-label">自定义插件</div></div>
+      <div class="meta-item"><div class="meta-num">6+</div><div class="meta-label">消息平台</div></div>
+    </div>
+  </div>
+
+  <!-- 当前配置 -->
+  <div class="section">
+    <div class="section-title">当前配置</div>
+    <div class="config-card">
+      <div class="config-row">
+        <span class="config-key">model.default</span>
+        <span class="config-val highlight">deepseek-v3-250324</span>
+      </div>
+      <div class="config-row">
+        <span class="config-key">model.base_url</span>
+        <span class="config-val">http://localhost:9000/v1 &nbsp;<span style="color:var(--text-muted)">(本地 AI Router)</span></span>
+      </div>
+      <div class="config-row">
+        <span class="config-key">terminal.backend</span>
+        <span class="config-val">local</span>
+      </div>
+      <div class="config-row">
+        <span class="config-key">安装路径</span>
+        <span class="config-val">~/.hermes/hermes-agent/</span>
+      </div>
+      <div class="config-row">
+        <span class="config-key">数据目录</span>
+        <span class="config-val">~/.hermes/ &nbsp;<span style="color:var(--text-muted)">(memories / skills / sessions / plugins)</span></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 自定义插件 -->
+  <div class="section">
+    <div class="section-title">自定义插件</div>
+    <div class="plugins-grid">
+      <div class="plugin-card">
+        <div class="plugin-header">
+          <span class="plugin-icon">🛡️</span>
+          <div>
+            <div class="plugin-name">管制清单</div>
+            <span class="plugin-tag">trade-controls</span>
+          </div>
+        </div>
+        <div class="plugin-desc">中国出口管制法规体系、战略矿产管制状态、反制措施汇总。嵌入 Hermes Web UI 的独立 Dashboard Tab，路径 <code>/controls</code>。</div>
+      </div>
+      <div class="plugin-card">
+        <div class="plugin-header">
+          <span class="plugin-icon">📊</span>
+          <div>
+            <div class="plugin-name">价格对比</div>
+            <span class="plugin-tag">trade-prices</span>
+          </div>
+        </div>
+        <div class="plugin-desc">管制商品国内外价格对比、价差分析与绕道激励计算。嵌入 Hermes Web UI 的独立 Dashboard Tab，路径 <code>/prices</code>。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 核心特性 -->
+  <div class="section">
+    <div class="section-title">核心特性</div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🔄</div>
+        <div class="feature-name">学习闭环</div>
+        <div class="feature-desc">Agent 在完成复杂任务后自动创建可复用技能。技能在使用中持续自我改进。FTS5 全文检索跨会话历史。</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🧠</div>
+        <div class="feature-name">持久记忆</div>
+        <div class="feature-desc">跨会话记忆系统 + Honcho 用户建模。Agent 对你的偏好、工作习惯建立持续深化的模型。</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <div class="feature-name">子 Agent 并行</div>
+        <div class="feature-desc">可生成隔离子 Agent 并行处理多个工作流。Python 脚本可通过 RPC 调用工具，零上下文消耗。</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⏰</div>
+        <div class="feature-name">定时自动化</div>
+        <div class="feature-desc">内置 cron 调度器，自然语言定义定时任务，结果推送到任意平台。每日报告、夜间备份、周审计。</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🌐</div>
+        <div class="feature-name">多平台网关</div>
+        <div class="feature-desc">Telegram、Discord、Slack、WhatsApp、Signal——统一单个 gateway 进程。语音备忘录转录，跨平台对话连续性。</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">☁️</div>
+        <div class="feature-name">多终端后端</div>
+        <div class="feature-desc">本地、Docker、SSH、Daytona（无服务器）、Modal（按需唤醒）——不绑定你的笔记本，$5 VPS 即可运行。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 消息平台 -->
+  <div class="section">
+    <div class="section-title">消息平台支持</div>
+    <div class="platforms">
+      <span class="platform-tag">📱 Telegram</span>
+      <span class="platform-tag">💬 Discord</span>
+      <span class="platform-tag">💼 Slack</span>
+      <span class="platform-tag">📲 WhatsApp</span>
+      <span class="platform-tag">🔒 Signal</span>
+      <span class="platform-tag">💻 CLI TUI</span>
+    </div>
+  </div>
+
+  <!-- 启动命令 -->
+  <div class="section">
+    <div class="section-title">启动与常用命令</div>
+    <div class="cmd-block">
+      <div class="comment"># 启动 Web UI (port 9119)</div>
+      <div class="cmd">hermes web</div>
+      <br>
+      <div class="comment"># 交互式 CLI</div>
+      <div class="cmd">hermes</div>
+      <br>
+      <div class="comment"># 切换模型</div>
+      <div class="cmd">hermes model</div>
+      <br>
+      <div class="comment"># 启动消息网关 (Telegram/Discord…)</div>
+      <div class="cmd">hermes gateway</div>
+      <br>
+      <div class="comment"># 管理定时任务</div>
+      <div class="cmd">hermes cron list</div>
+      <br>
+      <div class="comment"># 浏览/安装技能</div>
+      <div class="cmd">hermes skills</div>
+    </div>
+  </div>
+</main>
+
+<script>
+async function checkStatus() {
+  try {
+    await fetch('http://localhost:9119', { signal: AbortSignal.timeout(1000), mode: 'no-cors' });
+    setLive(true);
+  } catch { setLive(false); }
+}
+
+function setLive(live) {
+  const el = document.getElementById('liveStatus');
+  el.className = live ? 'status-live' : 'status-offline';
+  el.innerHTML = `<span class="dot"></span>${live ? 'Web UI 运行中 :9119' : '未启动（运行 hermes web）'}`;
+}
+
+checkStatus();
+</script>
+</body>
+</html>

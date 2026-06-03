@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DevFleet & Case Agent</title>
+  <style>
+    :root {
+      --bg:#F7F5F0;--surface:#FFFFFF;--surface-alt:#FBFAF7;
+      --text:#26262B;--text-secondary:#55555F;--text-muted:#8A8A95;
+      --border:#E4E0D8;--border-strong:#D2CDC2;
+      --success:#1F7A4D;--warning:#B45309;--danger:#B42318;
+      --shadow:0 1px 3px rgba(30,30,40,.06),0 4px 12px rgba(30,30,40,.05);
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);}
+    header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;height:52px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10;}
+    .back-btn{display:flex;align-items:center;gap:5px;text-decoration:none;color:var(--text-muted);font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg);}
+    .header-logo{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;}
+    .header-title{font-size:15px;font-weight:700;}
+    .header-sub{font-size:12px;color:var(--text-muted);}
+    main{max-width:960px;margin:0 auto;padding:36px 28px 60px;}
+    .systems-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+    @media(max-width:700px){.systems-grid{grid-template-columns:1fr;}}
+
+    .sys-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:var(--shadow);}
+    .sys-card-top{padding:20px 22px 16px;border-bottom:1px solid var(--border);position:relative;}
+    .sys-card-top::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+    .sys-header{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+    .sys-icon{font-size:28px;}
+    .sys-name{font-size:17px;font-weight:800;color:var(--text);}
+    .sys-tagline{font-size:12px;color:var(--text-muted);}
+    .sys-desc{font-size:13px;color:var(--text-secondary);line-height:1.7;}
+    .sys-body{padding:16px 22px;}
+    .section-mini-title{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px;}
+
+    .arch-list{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;}
+    .arch-item{display:flex;align-items:flex-start;gap:8px;font-size:12.5px;color:var(--text-secondary);line-height:1.5;}
+    .arch-item .arch-key{font-weight:600;color:var(--text);min-width:80px;flex-shrink:0;}
+    .arch-item .arch-tag{font-family:monospace;font-size:11px;background:var(--bg);padding:1px 5px;border-radius:4px;border:1px solid var(--border);}
+
+    .feature-list{display:flex;flex-direction:column;gap:5px;margin-bottom:16px;}
+    .feature{display:flex;align-items:flex-start;gap:7px;font-size:12.5px;color:var(--text-secondary);line-height:1.5;}
+    .feature::before{content:'•';color:var(--text-muted);flex-shrink:0;}
+
+    .status-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--bg);border-radius:8px;border:1px solid var(--border);margin-bottom:12px;}
+    .status-info{font-size:12px;color:var(--text-secondary);}
+    .status-badge{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:500;}
+    .status-badge.live{color:var(--success);}
+    .status-badge.offline{color:var(--text-muted);}
+    .sdot{width:7px;height:7px;border-radius:50%;background:currentColor;}
+
+    .btn-row{display:flex;gap:8px;flex-wrap:wrap;}
+    .btn-primary{padding:7px 14px;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;text-decoration:none;}
+    .btn-secondary{padding:7px 12px;background:var(--bg);color:var(--text-secondary);border:1px solid var(--border);border-radius:7px;font-size:12px;text-decoration:none;}
+
+    .cmd-block{background:#1a1a2e;color:#e2e8f0;padding:12px 16px;border-radius:7px;font-family:monospace;font-size:12px;line-height:1.7;margin-bottom:14px;}
+    .cmd-block .comment{color:#64748b;}
+    .cmd-block .cmd{color:#86efac;}
+  </style>
+</head>
+<body>
+
+<header>
+  <a href="/index.html" class="back-btn">← Hub</a>
+  <div class="header-logo" style="background:#b45309">⚡</div>
+  <div>
+    <div class="header-title">DevFleet & Case Agent</div>
+    <div class="header-sub">自主编码平台 + 海关情报系统</div>
+  </div>
+</header>
+
+<main>
+  <div class="systems-grid">
+
+    <!-- DevFleet -->
+    <div class="sys-card">
+      <div class="sys-card-top" style="--card-color:#b45309">
+        <div class="sys-header">
+          <span class="sys-icon">⚡</span>
+          <div>
+            <div class="sys-name">Claude DevFleet</div>
+            <div class="sys-tagline">Autonomous Coding Agent Platform</div>
+          </div>
+        </div>
+        <div class="sys-desc">多 Agent 自主编码平台。将任务（Mission）分发给多个 Claude Code Agent，每个 Agent 在独立 git worktree 中并行执行，支持子任务分发和依赖调度。基于 Claude Code SDK + MCP。</div>
+      </div>
+      <div class="sys-body">
+        <div class="section-mini-title">架构</div>
+        <div class="arch-list">
+          <div class="arch-item"><span class="arch-key">前端</span><span>React 19 + Vite</span><span class="arch-tag">:3101</span></div>
+          <div class="arch-item"><span class="arch-key">后端</span><span>FastAPI + SQLite</span><span class="arch-tag">:18801</span></div>
+          <div class="arch-item"><span class="arch-key">SDK</span><span>Claude Code SDK Engine</span></div>
+          <div class="arch-item"><span class="arch-key">隔离</span><span>Git Worktree（每个 Agent 独立）</span></div>
+        </div>
+        <div class="section-mini-title">核心特性</div>
+        <div class="feature-list">
+          <div class="feature">Mission 任务系统：依赖感知的并行任务分发</div>
+          <div class="feature">git worktree 隔离：防止 Agent 间代码冲突</div>
+          <div class="feature">MCP 工具集成：Agent 可调用 Read/Write/Grep/Glob</div>
+          <div class="feature">子 Mission 创建：Agent 可为复杂任务生成子任务</div>
+          <div class="feature">实时状态监控：前端 UI 查看所有 Agent 执行状态</div>
+        </div>
+        <div class="status-row">
+          <div class="status-info">Frontend :3101 / Backend :18801</div>
+          <div class="status-badge offline" id="devfleetStatus"><span class="sdot"></span>检查中</div>
+        </div>
+        <div class="cmd-block">
+          <div class="comment"># 启动 DevFleet</div>
+          <div class="cmd">cd ~/IdeaProjects/claude-devfleet</div>
+          <div class="cmd">./start.sh</div>
+          <div class="comment"># 或 Docker</div>
+          <div class="cmd">docker-compose up</div>
+        </div>
+        <div class="btn-row">
+          <a href="http://localhost:3101" target="_blank" class="btn-primary" style="background:#b45309">打开 UI :3101 →</a>
+          <a href="http://localhost:18801/docs" target="_blank" class="btn-secondary">API Docs</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Case Agent -->
+    <div class="sys-card">
+      <div class="sys-card-top" style="--card-color:#7e1d1d">
+        <div class="sys-header">
+          <span class="sys-icon">🔍</span>
+          <div>
+            <div class="sys-name">Case Agent</div>
+            <div class="sys-tagline">海关走私案件风险情报系统</div>
+          </div>
+        </div>
+        <div class="sys-desc">持续采集中国海关总署 42 个直属海关的行政处罚案件公示，结构化抽取案件信息，进行风险评分和预测，生成自动化情报报告。</div>
+      </div>
+      <div class="sys-body">
+        <div class="section-mini-title">架构</div>
+        <div class="arch-list">
+          <div class="arch-item"><span class="arch-key">后端</span><span>FastAPI + Python</span><span class="arch-tag">:8500</span></div>
+          <div class="arch-item"><span class="arch-key">数据源</span><span>海关总署 42 个直属海关</span></div>
+          <div class="arch-item"><span class="arch-key">存储</span><span>SQLite + 结构化数据</span></div>
+          <div class="arch-item"><span class="arch-key">调度</span><span>launchd 定时任务</span></div>
+        </div>
+        <div class="section-mini-title">核心特性</div>
+        <div class="feature-list">
+          <div class="feature">自动采集：覆盖全国 42 个直属海关公示</div>
+          <div class="feature">LLM 抽取：案件要素结构化（货物、处罚金额、违规类型）</div>
+          <div class="feature">风险预测：基于历史案件模式的风险评分</div>
+          <div class="feature">自动脱敏：自然人姓名和身份证号自动处理</div>
+          <div class="feature">定时报告：每周自动生成情报摘要</div>
+        </div>
+        <div class="status-row">
+          <div class="status-info">API :8500</div>
+          <div class="status-badge offline" id="caseStatus"><span class="sdot"></span>检查中</div>
+        </div>
+        <div class="cmd-block">
+          <div class="comment"># 启动 Case Agent API</div>
+          <div class="cmd">cd ~/IdeaProjects/case-agent</div>
+          <div class="cmd">python app.py</div>
+          <div class="comment"># 启动 AI Agent 服务</div>
+          <div class="cmd">python agent_app.py</div>
+        </div>
+        <div class="btn-row">
+          <a href="http://localhost:8500" target="_blank" class="btn-primary" style="background:#7e1d1d">打开 :8500 →</a>
+          <a href="http://localhost:8500/docs" target="_blank" class="btn-secondary">API Docs</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+async function checkAll() {
+  await Promise.all([
+    checkService('http://localhost:3101', 'devfleetStatus', 'DevFleet 运行中'),
+    checkService('http://localhost:8500', 'caseStatus', 'Case Agent 运行中')
+  ]);
+}
+
+async function checkService(url, elId, liveText) {
+  const el = document.getElementById(elId);
+  try {
+    await fetch(url, { signal: AbortSignal.timeout(1000), mode: 'no-cors' });
+    el.className = 'status-badge live';
+    el.innerHTML = `<span class="sdot"></span>${liveText}`;
+  } catch {
+    el.className = 'status-badge offline';
+    el.innerHTML = `<span class="sdot"></span>未启动`;
+  }
+}
+
+checkAll();
+</script>
+</body>
+</html>

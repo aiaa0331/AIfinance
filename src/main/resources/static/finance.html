@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Finance Agents</title>
+  <style>
+    :root {
+      --bg:             #F7F5F0;
+      --surface:        #FFFFFF;
+      --surface-alt:    #FBFAF7;
+      --text:           #26262B;
+      --text-secondary: #55555F;
+      --text-muted:     #8A8A95;
+      --border:         #E4E0D8;
+      --border-strong:  #D2CDC2;
+      --accent:         #2F6FB0;
+      --accent-hover:   #245A92;
+      --success:        #1F7A4D;
+      --warning:        #B45309;
+      --danger:         #B42318;
+      --shadow:         0 1px 3px rgba(30,30,40,.06), 0 4px 12px rgba(30,30,40,.05);
+      --shadow-md:      0 2px 8px rgba(30,30,40,.08), 0 8px 24px rgba(30,30,40,.07);
+      --radius:         8px;
+      --sidebar-width:  300px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Header ─────────────────────────────── */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      box-shadow: 0 1px 3px rgba(30,30,40,.04);
+    }
+
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header-logo {
+      width: 28px;
+      height: 28px;
+      background: var(--accent);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .header-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .header-subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+
+    .header-right { display: flex; align-items: center; gap: 12px; }
+
+    .api-key-form {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .api-key-input {
+      width: 240px;
+      padding: 6px 10px;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius);
+      font-size: 12px;
+      color: var(--text);
+      background: var(--bg);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .api-key-input:focus { border-color: var(--accent); }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      background: #f0fdf4;
+      color: var(--success);
+      border: 1px solid #bbf7d0;
+    }
+
+    .status-badge.offline {
+      background: #fef3c7;
+      color: var(--warning);
+      border-color: #fde68a;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    /* ── Layout ─────────────────────────────── */
+    .app-body {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ── Sidebar ─────────────────────────────── */
+    aside {
+      width: var(--sidebar-width);
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .sidebar-header {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .agent-list {
+      overflow-y: auto;
+      flex: 1;
+      padding: 8px;
+    }
+
+    .vertical-group { margin-bottom: 4px; }
+
+    .vertical-label {
+      padding: 8px 8px 4px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .agent-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 10px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: background 0.12s;
+      border: 1px solid transparent;
+    }
+
+    .agent-card:hover { background: var(--bg); }
+
+    .agent-card.active {
+      background: #EEF4FB;
+      border-color: #BFDBFE;
+    }
+
+    .agent-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .agent-card-text { flex: 1; min-width: 0; }
+
+    .agent-card-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .agent-card-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 1px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* ── Main Panel ─────────────────────────── */
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Welcome Screen ─────────────────────── */
+    .welcome-screen {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 40px;
+      color: var(--text-muted);
+    }
+
+    .welcome-icon {
+      font-size: 48px;
+      opacity: 0.3;
+    }
+
+    .welcome-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .welcome-text { font-size: 14px; text-align: center; max-width: 360px; line-height: 1.6; }
+
+    /* ── Agent Detail Panel ──────────────────── */
+    .agent-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .agent-panel-header {
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+
+    .agent-panel-top {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      margin-bottom: 12px;
+    }
+
+    .agent-panel-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+
+    .agent-panel-info { flex: 1; }
+
+    .agent-panel-name {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .vertical-tag {
+      display: inline-block;
+      margin-top: 4px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .agent-panel-desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: 12px;
+    }
+
+    .skills-row { display: flex; flex-wrap: wrap; gap: 6px; }
+
+    .skill-chip {
+      padding: 3px 8px;
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 11px;
+      color: var(--text-secondary);
+      font-family: "SF Mono", "Fira Code", monospace;
+    }
+
+    .mcp-chip {
+      padding: 3px 8px;
+      background: #FFF7ED;
+      border: 1px solid #FED7AA;
+      border-radius: 4px;
+      font-size: 11px;
+      color: #92400E;
+      font-family: "SF Mono", "Fira Code", monospace;
+    }
+
+    /* ── Chat Area ───────────────────────────── */
+    .chat-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .message {
+      max-width: 680px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .message.user { align-self: flex-end; }
+    .message.assistant { align-self: flex-start; }
+
+    .message-bubble {
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 13.5px;
+      line-height: 1.65;
+    }
+
+    .message.user .message-bubble {
+      background: var(--accent);
+      color: #fff;
+      border-bottom-right-radius: 4px;
+    }
+
+    .message.assistant .message-bubble {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-bottom-left-radius: 4px;
+      box-shadow: var(--shadow);
+      white-space: pre-wrap;
+    }
+
+    .message-bubble code {
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-size: 12px;
+      background: rgba(0,0,0,.05);
+      padding: 1px 4px;
+      border-radius: 3px;
+    }
+
+    .message-bubble strong { font-weight: 600; }
+
+    .message-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+      padding: 0 4px;
+    }
+
+    .message.user .message-meta { text-align: right; }
+
+    .typing-indicator {
+      display: flex;
+      gap: 4px;
+      padding: 12px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      border-bottom-left-radius: 4px;
+      width: fit-content;
+    }
+
+    .typing-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--text-muted);
+      animation: typing 1.2s infinite;
+    }
+
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes typing {
+      0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+      30% { opacity: 1; transform: translateY(-3px); }
+    }
+
+    /* ── Chat Input ──────────────────────────── */
+    .chat-input-area {
+      padding: 12px 24px 16px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .steering-hint {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .steering-example {
+      font-family: "SF Mono", "Fira Code", monospace;
+      color: var(--text-secondary);
+      cursor: pointer;
+      text-decoration: underline;
+      text-decoration-style: dotted;
+    }
+
+    .steering-example:hover { color: var(--accent); }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+    }
+
+    .chat-textarea {
+      flex: 1;
+      padding: 10px 14px;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius);
+      font-size: 13.5px;
+      color: var(--text);
+      background: var(--bg);
+      outline: none;
+      resize: none;
+      min-height: 42px;
+      max-height: 120px;
+      line-height: 1.5;
+      font-family: inherit;
+      transition: border-color 0.15s;
+    }
+
+    .chat-textarea:focus { border-color: var(--accent); }
+
+    .chat-textarea:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .send-btn {
+      padding: 10px 18px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+      white-space: nowrap;
+      height: 42px;
+    }
+
+    .send-btn:hover:not(:disabled) { background: var(--accent-hover); }
+    .send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ── Scrollbar ───────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+    /* ── Responsive ──────────────────────────── */
+    @media (max-width: 768px) {
+      :root { --sidebar-width: 200px; }
+      .api-key-input { width: 160px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<header>
+  <div class="header-brand">
+    <a href="/index.html" style="display:flex;align-items:center;gap:5px;text-decoration:none;color:var(--text-muted);font-size:12px;margin-right:10px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg)">← Hub</a>
+    <div class="header-logo">💼</div>
+    <div>
+      <div class="header-title">AI Finance Agents</div>
+      <div class="header-subtitle">Anthropic · Financial Services · 10 Agents</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="api-key-form">
+      <input
+        class="api-key-input"
+        type="password"
+        id="apiKeyInput"
+        placeholder="sk-ant-... (Anthropic API Key)"
+        autocomplete="off"
+      >
+    </div>
+    <div class="status-badge offline" id="statusBadge">
+      <div class="status-dot"></div>
+      <span id="statusText">未连接</span>
+    </div>
+  </div>
+</header>
+
+<!-- Body -->
+<div class="app-body">
+
+  <!-- Sidebar -->
+  <aside>
+    <div class="sidebar-header">
+      <div class="sidebar-label">Agents（10）</div>
+    </div>
+    <div class="agent-list" id="agentList">
+      <div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px;">加载中…</div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main id="mainPanel">
+    <div class="welcome-screen" id="welcomeScreen">
+      <div class="welcome-icon">🏦</div>
+      <div class="welcome-title">选择一个 Agent 开始</div>
+      <div class="welcome-text">
+        从左侧选择一个金融 Agent，查看其能力说明并发送指令进行交互。
+        所有 Agent 均来自 <strong>anthropics/financial-services</strong> 仓库。
+      </div>
+    </div>
+  </main>
+
+</div>
+
+<script>
+// ── State ───────────────────────────────────────────
+let agents = [];
+let selectedAgent = null;
+let isStreaming = false;
+let conversationHistory = {}; // agentId → messages[]
+
+// ── Init ────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+  loadApiKey();
+  await fetchAgents();
+  document.getElementById('apiKeyInput').addEventListener('change', onApiKeyChange);
+  document.getElementById('apiKeyInput').addEventListener('input', debounce(onApiKeyChange, 800));
+});
+
+function loadApiKey() {
+  const stored = localStorage.getItem('anthropic_api_key');
+  if (stored) {
+    document.getElementById('apiKeyInput').value = stored;
+    checkHealth();
+  }
+}
+
+function onApiKeyChange() {
+  const key = document.getElementById('apiKeyInput').value.trim();
+  if (key) {
+    localStorage.setItem('anthropic_api_key', key);
+    checkHealth();
+  } else {
+    localStorage.removeItem('anthropic_api_key');
+    setStatus(false);
+  }
+}
+
+async function checkHealth() {
+  const key = document.getElementById('apiKeyInput').value.trim();
+  try {
+    const res = await fetch('/api/health', {
+      headers: key ? { 'X-Api-Key': key } : {}
+    });
+    const data = await res.json();
+    setStatus(data.apiKeyConfigured);
+  } catch (e) {
+    setStatus(false);
+  }
+}
+
+function setStatus(online) {
+  const badge = document.getElementById('statusBadge');
+  const text = document.getElementById('statusText');
+  if (online) {
+    badge.className = 'status-badge';
+    text.textContent = '已连接';
+  } else {
+    badge.className = 'status-badge offline';
+    text.textContent = '未连接';
+  }
+}
+
+// ── Agent List ──────────────────────────────────────
+const VERTICAL_ICONS = {
+  'Investment Banking': { icon: '💼', bg: '#EFF6FF' },
+  'Equity Research':    { icon: '📊', bg: '#F0FDF4' },
+  'Wealth Management':  { icon: '💰', bg: '#FFFBEB' },
+  'Financial Analysis': { icon: '🧮', bg: '#EEF2FF' },
+  'Private Equity':     { icon: '🏛️', bg: '#FFF1F2' },
+};
+
+async function fetchAgents() {
+  try {
+    const res = await fetch('/api/agents');
+    agents = await res.json();
+    agents.sort((a, b) => {
+      const vOrder = ['Investment Banking','Equity Research','Wealth Management','Financial Analysis','Private Equity'];
+      return vOrder.indexOf(a.vertical) - vOrder.indexOf(b.vertical) || a.displayName.localeCompare(b.displayName);
+    });
+    renderAgentList();
+  } catch (e) {
+    document.getElementById('agentList').innerHTML =
+      '<div style="padding:16px;color:var(--danger);font-size:12px;">加载失败，请刷新页面</div>';
+  }
+}
+
+function renderAgentList() {
+  const list = document.getElementById('agentList');
+  const grouped = {};
+  agents.forEach(a => {
+    if (!grouped[a.vertical]) grouped[a.vertical] = [];
+    grouped[a.vertical].push(a);
+  });
+
+  const vOrder = ['Investment Banking','Equity Research','Wealth Management','Financial Analysis','Private Equity'];
+  let html = '';
+  vOrder.forEach(v => {
+    if (!grouped[v]) return;
+    const { icon, bg } = VERTICAL_ICONS[v] || { icon: '🤖', bg: '#F5F5F5' };
+    html += `<div class="vertical-group">
+      <div class="vertical-label">${v}</div>`;
+    grouped[v].forEach(agent => {
+      html += `
+        <div class="agent-card" data-id="${agent.id}" onclick="selectAgent('${agent.id}')">
+          <div class="agent-icon" style="background:${bg}">${icon}</div>
+          <div class="agent-card-text">
+            <div class="agent-card-name">${agent.displayName}</div>
+            <div class="agent-card-desc">${shortDesc(agent.description)}</div>
+          </div>
+        </div>`;
+    });
+    html += '</div>';
+  });
+  list.innerHTML = html;
+}
+
+function shortDesc(desc) {
+  return desc.length > 60 ? desc.substring(0, 60) + '…' : desc;
+}
+
+// ── Agent Selection ─────────────────────────────────
+function selectAgent(id) {
+  if (isStreaming) return;
+  selectedAgent = agents.find(a => a.id === id);
+  if (!selectedAgent) return;
+
+  // Update sidebar active state
+  document.querySelectorAll('.agent-card').forEach(el => {
+    el.classList.toggle('active', el.dataset.id === id);
+  });
+
+  renderAgentPanel();
+}
+
+function renderAgentPanel() {
+  const a = selectedAgent;
+  const { icon, bg } = VERTICAL_ICONS[a.vertical] || { icon: '🤖', bg: '#F5F5F5' };
+  const history = conversationHistory[a.id] || [];
+
+  const main = document.getElementById('mainPanel');
+  main.innerHTML = `
+    <div class="agent-panel">
+      <div class="agent-panel-header">
+        <div class="agent-panel-top">
+          <div class="agent-panel-icon" style="background:${bg}">${icon}</div>
+          <div class="agent-panel-info">
+            <div class="agent-panel-name">${a.displayName}</div>
+            <span class="vertical-tag" style="background:${a.verticalColor}">${a.vertical}</span>
+          </div>
+        </div>
+        <div class="agent-panel-desc">${a.description}</div>
+        <div class="skills-row">
+          ${a.skills.map(s => `<span class="skill-chip">${s}</span>`).join('')}
+          ${(a.requiredMcpServers || []).map(s => `<span class="mcp-chip">mcp:${s}</span>`).join('')}
+        </div>
+      </div>
+
+      <div class="chat-area" id="chatArea">
+        ${history.length === 0 ? renderEmptyChatHint(a) : history.map(m => renderMessage(m)).join('')}
+      </div>
+
+      <div class="chat-input-area">
+        <div class="steering-hint">
+          示例指令：
+          <span class="steering-example" onclick="fillExample()" id="steeringExample">${escapeHtml(a.steeringExample)}</span>
+        </div>
+        <div class="input-row">
+          <textarea
+            class="chat-textarea"
+            id="chatInput"
+            placeholder="输入指令，按 Enter 发送（Shift+Enter 换行）"
+            rows="1"
+            onkeydown="handleKeydown(event)"
+            oninput="autoResize(this)"
+          ></textarea>
+          <button class="send-btn" id="sendBtn" onclick="sendMessage()">发送</button>
+        </div>
+      </div>
+    </div>
+  `;
+  scrollChatToBottom();
+}
+
+function renderEmptyChatHint(a) {
+  return `
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--text-muted);text-align:center;padding:40px">
+      <div style="font-size:36px;opacity:0.25">${VERTICAL_ICONS[a.vertical]?.icon || '🤖'}</div>
+      <div style="font-size:14px;color:var(--text-secondary);font-weight:500">${a.displayName} 就绪</div>
+      <div style="font-size:13px;max-width:380px;line-height:1.6">点击上方示例指令填充，或直接输入你的指令。</div>
+    </div>`;
+}
+
+function renderMessage({ role, content, time }) {
+  const isUser = role === 'user';
+  const timeStr = time ? new Date(time).toLocaleTimeString('zh', { hour: '2-digit', minute: '2-digit' }) : '';
+  return `
+    <div class="message ${role}">
+      <div class="message-bubble">${formatContent(content)}</div>
+      <div class="message-meta">${isUser ? '你' : selectedAgent?.displayName} · ${timeStr}</div>
+    </div>`;
+}
+
+function formatContent(text) {
+  // Basic markdown-like formatting
+  return escapeHtml(text)
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/`(.+?)`/g, '<code>$1</code>')
+    .replace(/^## (.+)$/gm, '<strong style="display:block;margin:8px 0 4px;font-size:14px">$1</strong>')
+    .replace(/^# (.+)$/gm, '<strong style="display:block;margin:8px 0 4px;font-size:15px">$1</strong>')
+    .replace(/^- (.+)$/gm, '• $1');
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+// ── Chat ────────────────────────────────────────────
+async function sendMessage() {
+  const input = document.getElementById('chatInput');
+  const message = input.value.trim();
+  if (!message || isStreaming || !selectedAgent) return;
+
+  const key = document.getElementById('apiKeyInput').value.trim();
+  if (!key) {
+    alert('请先在右上角填入 Anthropic API Key');
+    return;
+  }
+
+  // Add user message
+  const now = Date.now();
+  addToHistory(selectedAgent.id, { role: 'user', content: message, time: now });
+  input.value = '';
+  autoResize(input);
+  appendMessageToDOM({ role: 'user', content: message, time: now });
+
+  // Show typing indicator
+  const chatArea = document.getElementById('chatArea');
+  const typingId = 'typing-' + now;
+  chatArea.insertAdjacentHTML('beforeend', `
+    <div class="message assistant" id="${typingId}">
+      <div class="typing-indicator">
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+      </div>
+    </div>`);
+  scrollChatToBottom();
+
+  setStreaming(true);
+
+  // Replace typing with streaming bubble
+  let responseText = '';
+  const assistantTime = Date.now();
+  let bubbleEl = null;
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ agentId: selectedAgent.id, message, apiKey: key })
+    });
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop(); // keep incomplete line
+
+      for (const line of lines) {
+        if (line.startsWith('data:')) {
+          const chunk = line.substring(5).trim();
+          if (!chunk) continue;
+
+          if (chunk === '\n\n[DONE]' || chunk === '[DONE]') {
+            break;
+          }
+
+          if (chunk.startsWith('[ERROR]')) {
+            responseText = chunk;
+            break;
+          }
+
+          responseText += chunk;
+
+          // Replace typing indicator with actual bubble on first chunk
+          if (!bubbleEl) {
+            const typingEl = document.getElementById(typingId);
+            if (typingEl) {
+              typingEl.innerHTML = `
+                <div class="message-bubble">${formatContent(responseText)}</div>
+                <div class="message-meta">${selectedAgent.displayName} · ${new Date(assistantTime).toLocaleTimeString('zh', { hour: '2-digit', minute: '2-digit' })}</div>`;
+              bubbleEl = typingEl.querySelector('.message-bubble');
+            }
+          } else {
+            bubbleEl.innerHTML = formatContent(responseText);
+          }
+          scrollChatToBottom();
+        }
+      }
+    }
+  } catch (e) {
+    responseText = '[ERROR] 请求失败：' + e.message;
+  }
+
+  // Remove typing indicator if still there
+  const typingEl = document.getElementById(typingId);
+  if (typingEl && !bubbleEl) {
+    typingEl.innerHTML = `
+      <div class="message-bubble">${formatContent(responseText || '（无响应）')}</div>
+      <div class="message-meta">${selectedAgent.displayName}</div>`;
+  }
+
+  // Save to history
+  if (responseText) {
+    addToHistory(selectedAgent.id, { role: 'assistant', content: responseText, time: assistantTime });
+  }
+
+  setStreaming(false);
+  scrollChatToBottom();
+}
+
+function addToHistory(agentId, message) {
+  if (!conversationHistory[agentId]) conversationHistory[agentId] = [];
+  conversationHistory[agentId].push(message);
+}
+
+function appendMessageToDOM(msg) {
+  const chatArea = document.getElementById('chatArea');
+  if (!chatArea) return;
+  // Remove empty hint if present
+  const hint = chatArea.querySelector('[style*="flex:1"]');
+  if (hint) hint.remove();
+  chatArea.insertAdjacentHTML('beforeend', renderMessage(msg));
+  scrollChatToBottom();
+}
+
+function scrollChatToBottom() {
+  const chatArea = document.getElementById('chatArea');
+  if (chatArea) requestAnimationFrame(() => { chatArea.scrollTop = chatArea.scrollHeight; });
+}
+
+function setStreaming(val) {
+  isStreaming = val;
+  const btn = document.getElementById('sendBtn');
+  const input = document.getElementById('chatInput');
+  if (btn) { btn.disabled = val; btn.textContent = val ? '…' : '发送'; }
+  if (input) input.disabled = val;
+}
+
+function fillExample() {
+  const input = document.getElementById('chatInput');
+  if (input && selectedAgent) {
+    input.value = selectedAgent.steeringExample;
+    autoResize(input);
+    input.focus();
+  }
+}
+
+function handleKeydown(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+function debounce(fn, delay) {
+  let t;
+  return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), delay); };
+}
+</script>
+</body>
+</html>

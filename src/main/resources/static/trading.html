@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TradingAgents</title>
+  <style>
+    :root {
+      --bg:#F7F5F0;--surface:#FFFFFF;--surface-alt:#FBFAF7;
+      --text:#26262B;--text-secondary:#55555F;--text-muted:#8A8A95;
+      --border:#E4E0D8;--border-strong:#D2CDC2;
+      --accent:#166534;--accent-hover:#14532d;
+      --success:#1F7A4D;--warning:#B45309;--danger:#B42318;
+      --shadow:0 1px 3px rgba(30,30,40,.06),0 4px 12px rgba(30,30,40,.05);
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);}
+    header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;height:52px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10;}
+    .back-btn{display:flex;align-items:center;gap:5px;text-decoration:none;color:var(--text-muted);font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg);}
+    .header-logo{width:28px;height:28px;background:#166534;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;}
+    .header-title{font-size:15px;font-weight:700;}
+    .header-sub{font-size:12px;color:var(--text-muted);}
+    .header-actions{margin-left:auto;display:flex;gap:10px;}
+    .primary-btn{padding:6px 14px;background:#166534;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;text-decoration:none;}
+    .secondary-btn{padding:6px 14px;background:var(--bg);color:var(--text-secondary);border:1px solid var(--border);border-radius:7px;font-size:12px;cursor:pointer;text-decoration:none;}
+    .status-live{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--success);font-weight:500;}
+    .status-offline{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text-muted);}
+    .dot{width:7px;height:7px;border-radius:50%;background:currentColor;}
+
+    main{max-width:960px;margin:0 auto;padding:36px 28px 60px;}
+
+    /* Hero */
+    .hero{text-align:center;margin-bottom:44px;}
+    .hero-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;background:#f0fdf4;color:var(--success);font-size:12px;font-weight:600;border:1px solid #bbf7d0;margin-bottom:18px;}
+    .hero h1{font-size:34px;font-weight:800;color:var(--text);letter-spacing:-.03em;margin-bottom:14px;}
+    .hero-desc{font-size:15px;color:var(--text-secondary);line-height:1.7;max-width:580px;margin:0 auto 24px;}
+    .meta-row{display:flex;justify-content:center;gap:32px;}
+    .meta-item{text-align:center;}
+    .meta-num{font-size:22px;font-weight:800;color:var(--text);}
+    .meta-label{font-size:11px;color:var(--text-muted);}
+
+    /* Section */
+    .section{margin-bottom:40px;}
+    .section-title{font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:8px;}
+
+    /* Architecture flow */
+    .flow{display:flex;align-items:center;gap:0;flex-wrap:wrap;justify-content:center;margin-bottom:24px;}
+    .flow-node{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 16px;text-align:center;box-shadow:var(--shadow);min-width:120px;}
+    .flow-node .node-emoji{font-size:22px;margin-bottom:4px;}
+    .flow-node .node-name{font-size:12px;font-weight:600;color:var(--text);}
+    .flow-node .node-role{font-size:10px;color:var(--text-muted);margin-top:2px;}
+    .flow-arrow{font-size:18px;color:var(--border-strong);padding:0 8px;}
+
+    /* Agent roles grid */
+    .roles-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;}
+    .role-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;box-shadow:var(--shadow);}
+    .role-header{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+    .role-icon{font-size:20px;}
+    .role-name{font-size:14px;font-weight:700;color:var(--text);}
+    .role-type{font-size:10px;color:#fff;padding:2px 7px;border-radius:10px;margin-top:2px;font-weight:600;}
+    .role-desc{font-size:12px;color:var(--text-secondary);line-height:1.6;}
+
+    /* Providers */
+    .providers{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;}
+    .provider-tag{padding:4px 10px;border-radius:6px;font-size:12px;font-weight:500;border:1px solid var(--border);}
+
+    /* Cmd block */
+    .cmd-block{background:#1a1a2e;color:#e2e8f0;padding:14px 18px;border-radius:8px;font-family:"SF Mono","Fira Code",monospace;font-size:12.5px;line-height:1.7;}
+    .cmd-block .comment{color:#64748b;}
+    .cmd-block .cmd{color:#86efac;}
+  </style>
+</head>
+<body>
+
+<header>
+  <a href="/index.html" class="back-btn">← Hub</a>
+  <div class="header-logo">📈</div>
+  <div>
+    <div class="header-title">TradingAgents</div>
+    <div class="header-sub">TauricResearch · Multi-Agent LLM Trading Framework</div>
+  </div>
+  <div class="header-actions">
+    <span id="liveStatus" class="status-offline"><span class="dot"></span>检查中…</span>
+    <a href="http://localhost:8060" target="_blank" class="primary-btn">打开 Web UI →</a>
+    <a href="https://github.com/TauricResearch/TradingAgents" target="_blank" class="secondary-btn">GitHub</a>
+  </div>
+</header>
+
+<main>
+  <div class="hero">
+    <div class="hero-badge">📄 arXiv:2412.20138</div>
+    <h1>TradingAgents</h1>
+    <p class="hero-desc">多智能体 LLM 量化交易框架。Bull 与 Bear 分析师对立辩论，Risk Manager 仲裁风险，Trader 生成交易提案，Portfolio Manager 最终决策。</p>
+    <div class="meta-row">
+      <div class="meta-item"><div class="meta-num">8</div><div class="meta-label">Agent 角色</div></div>
+      <div class="meta-item"><div class="meta-num">v0.2.5</div><div class="meta-label">当前版本</div></div>
+      <div class="meta-item"><div class="meta-num">6+</div><div class="meta-label">LLM 提供商</div></div>
+      <div class="meta-item"><div class="meta-num">8060</div><div class="meta-label">Web 端口</div></div>
+    </div>
+  </div>
+
+  <!-- Architecture Flow -->
+  <div class="section">
+    <div class="section-title">决策流水线</div>
+    <div class="flow">
+      <div class="flow-node"><div class="node-emoji">📰</div><div class="node-name">数据采集</div><div class="node-role">市场/新闻/基本面</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node"><div class="node-emoji">🐂</div><div class="node-name">Bull Researcher</div><div class="node-role">多头论据</div></div>
+      <div class="flow-arrow">⇄</div>
+      <div class="flow-node"><div class="node-emoji">🐻</div><div class="node-name">Bear Researcher</div><div class="node-role">空头论据</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node"><div class="node-emoji">⚖️</div><div class="node-name">Risk Manager</div><div class="node-role">风险仲裁</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node"><div class="node-emoji">📊</div><div class="node-name">Research Manager</div><div class="node-role">投资计划</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node"><div class="node-emoji">💹</div><div class="node-name">Trader</div><div class="node-role">交易提案</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node"><div class="node-emoji">🏦</div><div class="node-name">Portfolio Manager</div><div class="node-role">最终决策</div></div>
+    </div>
+  </div>
+
+  <!-- Agent Roles -->
+  <div class="section">
+    <div class="section-title">Agent 角色详解</div>
+    <div class="roles-grid">
+      <div class="role-card">
+        <div class="role-header">
+          <span class="role-icon">🐂</span>
+          <div><div class="role-name">Bull Researcher</div><div class="role-type" style="background:#166534">多头研究员</div></div>
+        </div>
+        <div class="role-desc">构建支持投资的证据链：增长潜力、竞争优势、正面市场信号。利用市场研报、情绪报告、基本面数据形成多头论述，并主动反驳空头观点。</div>
+      </div>
+      <div class="role-card">
+        <div class="role-header">
+          <span class="role-icon">🐻</span>
+          <div><div class="role-name">Bear Researcher</div><div class="role-type" style="background:#b42318">空头研究员</div></div>
+        </div>
+        <div class="role-desc">识别投资风险：估值泡沫、竞争威胁、宏观逆风。与多头研究员进行多轮辩论，确保风险充分暴露在决策过程中。</div>
+      </div>
+      <div class="role-card">
+        <div class="role-header">
+          <span class="role-icon">⚖️</span>
+          <div><div class="role-name">Risk Manager</div><div class="role-type" style="background:#b45309">风险管理</div></div>
+        </div>
+        <div class="role-desc">三种视角（保守/中性/激进）对多空辩论结果进行风险评估与仲裁，提出风险调整后的投资立场与仓位建议。</div>
+      </div>
+      <div class="role-card">
+        <div class="role-header">
+          <span class="role-icon">📊</span>
+          <div><div class="role-name">Research Manager</div><div class="role-type" style="background:#1e40af">研究主管</div></div>
+        </div>
+        <div class="role-desc">汇总多空辩论与风险评估，生成结构化投资计划（结构化输出），包括方向、理由、关键风险和仓位建议。</div>
+      </div>
+      <div class="role-card">
+        <div class="role-header">
+          <span class="role-icon">💹</span>
+          <div><div class="role-name">Trader</div><div class="role-type" style="background:#4338ca">交易执行</div></div>
+        </div>
+        <div class="role-desc">将投资计划转化为具体的交易提案：买/卖/持有 + 数量 + 信心评级。生成结构化 TraderProposal，供 Portfolio Manager 最终确认。</div>
+      </div>
+      <div class="role-card">
+        <div class="role-header">
+          <span class="role-icon">🏦</span>
+          <div><div class="role-name">Portfolio Manager</div><div class="role-type" style="background:#374151">组合管理</div></div>
+        </div>
+        <div class="role-desc">考虑整体仓位、风险敞口和投资组合平衡，对 Trader 提案进行最终批准或调整。输出最终交易决策和持仓更新。</div>
+      </div>
+      <div class="role-card">
+        <div class="role-header">
+          <span class="role-icon">📰</span>
+          <div><div class="role-name">Market Data Agent</div><div class="role-type" style="background:#0e7490">数据层</div></div>
+        </div>
+        <div class="role-desc">集成 yfinance、新闻 API、社交媒体情绪、基本面数据，为所有分析 Agent 提供统一数据源。支持股票和加密资产。</div>
+      </div>
+      <div class="role-card">
+        <div class="role-header">
+          <span class="role-icon">🧠</span>
+          <div><div class="role-name">Memory System</div><div class="role-type" style="background:#7c3aed">记忆系统</div></div>
+        </div>
+        <div class="role-desc">LangGraph checkpoint 持久化决策历史，支持断点续跑。决策日志记录每次分析结果，用于回测和策略优化。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LLM Providers -->
+  <div class="section">
+    <div class="section-title">支持的 LLM 提供商</div>
+    <div class="providers">
+      <span class="provider-tag" style="background:#EEF4FB;color:#1e40af;border-color:#BFDBFE">Claude (Anthropic)</span>
+      <span class="provider-tag" style="background:#f0fdf4;color:#166534;border-color:#bbf7d0">GPT (OpenAI)</span>
+      <span class="provider-tag" style="background:#faf5ff;color:#7c3aed;border-color:#e9d5ff">Gemini (Google)</span>
+      <span class="provider-tag" style="background:#fff7ed;color:#c2410c;border-color:#fed7aa">Grok (xAI)</span>
+      <span class="provider-tag" style="background:#f0fdf4;color:#065f46;border-color:#a7f3d0">DeepSeek</span>
+      <span class="provider-tag" style="background:#fef3c7;color:#b45309;border-color:#fde68a">Qwen / GLM</span>
+      <span class="provider-tag" style="background:#f8fafc;color:#374151;border-color:#e2e8f0">Ollama (本地)</span>
+    </div>
+  </div>
+
+  <!-- Run Instructions -->
+  <div class="section">
+    <div class="section-title">启动方式</div>
+    <div class="cmd-block">
+      <div class="comment"># 进入项目目录</div>
+      <div class="cmd">cd ~/IdeaProjects/TradingAgents</div>
+      <br>
+      <div class="comment"># 启动 Web UI (port 8060)</div>
+      <div class="cmd">python web_server.py</div>
+      <br>
+      <div class="comment"># 或使用 CLI 分析单只股票</div>
+      <div class="cmd">python main.py --ticker AAPL --date 2025-01-15</div>
+      <br>
+      <div class="comment"># Docker 方式</div>
+      <div class="cmd">docker-compose up</div>
+    </div>
+  </div>
+</main>
+
+<script>
+async function checkStatus() {
+  try {
+    const r = await fetch('http://localhost:8060', { signal: AbortSignal.timeout(1000) });
+    if (r.ok || r.status < 500) setLive(true);
+    else setLive(false);
+  } catch { setLive(false); }
+}
+
+function setLive(live) {
+  const el = document.getElementById('liveStatus');
+  el.className = live ? 'status-live' : 'status-offline';
+  el.innerHTML = `<span class="dot"></span>${live ? '运行中 :8060' : '未启动'}`;
+}
+
+checkStatus();
+</script>
+</body>
+</html>
