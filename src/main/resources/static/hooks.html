@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hooks</title>
+  <style>
+    :root{--bg:#F7F5F0;--surface:#FFF;--surface-alt:#FBFAF7;--text:#26262B;--text-secondary:#55555F;--text-muted:#8A8A95;--border:#E4E0D8;--border-strong:#D2CDC2;--accent:#374151;--success:#1F7A4D;--warning:#B45309;--shadow:0 1px 3px rgba(30,30,40,.06),0 4px 12px rgba(30,30,40,.05);}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+    header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;height:52px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10;box-shadow:var(--shadow);}
+    .back-btn{display:flex;align-items:center;gap:5px;text-decoration:none;color:var(--text-muted);font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg);}
+    .header-logo{width:28px;height:28px;background:#374151;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:15px;}
+    .header-title{font-size:15px;font-weight:700;}
+    .header-sub{font-size:12px;color:var(--text-muted);}
+    main{max-width:900px;margin:0 auto;padding:32px 28px 60px;}
+
+    .stats-row{display:flex;gap:16px;margin-bottom:28px;}
+    .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 20px;flex:1;box-shadow:var(--shadow);}
+    .stat-num{font-size:24px;font-weight:800;color:var(--text);}
+    .stat-label{font-size:11px;color:var(--text-muted);margin-top:2px;}
+
+    .event-section{margin-bottom:28px;}
+    .event-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+    .event-name{font-size:14px;font-weight:800;color:var(--text);}
+    .event-badge{font-size:10px;padding:3px 8px;border-radius:4px;font-weight:600;}
+    .event-desc{font-size:12px;color:var(--text-muted);}
+    .hook-count{font-size:11px;color:var(--text-muted);margin-left:auto;}
+
+    .hooks-list{display:flex;flex-direction:column;gap:8px;}
+    .hook-row{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 16px;display:flex;align-items:flex-start;gap:14px;box-shadow:var(--shadow);}
+    .hook-script{font-size:12px;font-weight:700;font-family:"SF Mono","Fira Code",monospace;color:var(--text);min-width:200px;flex-shrink:0;}
+    .hook-matcher{font-size:10px;padding:2px 7px;border-radius:4px;background:var(--surface-alt);border:1px solid var(--border);color:var(--text-secondary);font-family:monospace;white-space:nowrap;}
+    .hook-desc{font-size:12px;color:var(--text-secondary);line-height:1.55;flex:1;}
+
+    /* event colors */
+    .ev-SessionStart{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;}
+    .ev-PreToolUse{background:#FFF7ED;color:#c2410c;border:1px solid #FED7AA;}
+    .ev-PostToolUse{background:#EEF4FB;color:#1e40af;border:1px solid #BFDBFE;}
+    .ev-PostToolUseFailure{background:#FEF2F2;color:#b42318;border:1px solid #FECACA;}
+    .ev-PreCompact{background:#f5f3ff;color:#7c3aed;border:1px solid #ddd6fe;}
+    .ev-Stop{background:#faf5ff;color:#7c3aed;border:1px solid #ddd6fe;}
+    .ev-SessionEnd{background:#F1F5F9;color:#374151;border:1px solid #CBD5E1;}
+
+    .docs-hint{margin-top:24px;padding:14px 18px;background:var(--surface-alt);border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--text-secondary);line-height:1.7;}
+    .docs-hint code{font-family:"SF Mono","Fira Code",monospace;background:var(--bg);padding:1px 5px;border-radius:3px;border:1px solid var(--border);font-size:11px;}
+  </style>
+</head>
+<body>
+<header>
+  <a href="/index.html" class="back-btn">← Hub</a>
+  <div class="header-logo">🪝</div>
+  <div>
+    <div class="header-title">Hooks</div>
+    <div class="header-sub" id="headerSub">加载中…</div>
+  </div>
+</header>
+
+<main>
+  <div class="stats-row" id="statsRow"></div>
+  <div id="hookSections"><div style="color:var(--text-muted);font-size:13px">加载中…</div></div>
+
+  <div class="docs-hint">
+    <strong>Hook 配置位置：</strong><code>~/.claude/settings.json</code> → <code>hooks</code> 字段<br>
+    <strong>Hook 脚本目录：</strong><code>~/.claude/scripts/hooks/</code><br>
+    <strong>生命周期顺序：</strong>SessionStart → PreToolUse → PostToolUse → Stop → SessionEnd
+  </div>
+</main>
+
+<script>
+const EVENT_DESCS = {
+  SessionStart:         '会话启动时触发 — 加载项目上下文、初始化记忆',
+  PreToolUse:           '工具调用前触发 — 参数验证、安全检查、阻断危险操作',
+  PostToolUse:          '工具调用成功后触发 — 自动格式化、lint、编译验证',
+  PostToolUseFailure:   '工具调用失败后触发 — 错误日志、告警通知',
+  PreCompact:           '上下文压缩前触发 — 保存重要状态、生成摘要',
+  Stop:                 '模型停止输出时触发 — 代码审查、更新 CLAUDE.md、保存记忆',
+  SessionEnd:           '会话结束时触发 — 清理临时状态、最终归档',
+};
+
+async function init(){
+  const r = await fetch('/api/hooks');
+  const data = await r.json(); // { event: [HookEntry] }
+  const events = Object.keys(data);
+  const total = events.reduce((n,e)=>n+data[e].length, 0);
+  document.getElementById('headerSub').textContent = `${total} 个 Hooks · ${events.length} 个事件 · ~/.claude/settings.json`;
+
+  const uniqueScripts = new Set(events.flatMap(e=>data[e].map(h=>h.scriptName)));
+  document.getElementById('statsRow').innerHTML = `
+    <div class="stat-card"><div class="stat-num">${total}</div><div class="stat-label">Hook 总数</div></div>
+    <div class="stat-card"><div class="stat-num">${events.length}</div><div class="stat-label">触发事件</div></div>
+    <div class="stat-card"><div class="stat-num">${uniqueScripts.size}</div><div class="stat-label">脚本种类</div></div>`;
+
+  document.getElementById('hookSections').innerHTML = events.map(event => {
+    const hooks = data[event];
+    const desc = EVENT_DESCS[event]||'';
+    return `
+    <div class="event-section">
+      <div class="event-header">
+        <span class="event-name">${event}</span>
+        <span class="event-badge ev-${event}">${event}</span>
+        <span class="event-desc">${esc(desc)}</span>
+        <span class="hook-count">${hooks.length} 个</span>
+      </div>
+      <div class="hooks-list">
+        ${hooks.map(h=>`
+          <div class="hook-row">
+            <span class="hook-script">${esc(h.scriptName)}</span>
+            <span class="hook-matcher">${esc(h.matcher)}</span>
+            <span class="hook-desc">${esc(h.description)}</span>
+          </div>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+init();
+</script>
+</body>
+</html>

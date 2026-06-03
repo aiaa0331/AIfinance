@@ -109,6 +109,51 @@
   </div>
 </div>
 
+<div class="section" style="padding-top:0">
+  <div class="section-title">Claude Code 工具链</div>
+  <div class="cards-grid" id="toolsGrid">
+    <a class="system-card" href="/skills.html" style="--card-color:#2F6FB0">
+      <div class="card-header">
+        <div class="card-icon">⚡</div>
+        <div class="card-badges"><span class="count-badge" style="background:#2F6FB0" id="skillCount">— Skills</span></div>
+      </div>
+      <div class="card-name">Skills</div>
+      <div class="card-desc">Claude Code 的可调用技能库。涵盖编程模式、Agent 工程、TDD、安全审查、自定义业务逻辑等，用 /skill名称 触发。</div>
+      <div class="card-tech">~/.claude/skills/ · ECC + 自定义</div>
+      <div class="card-footer">
+        <span class="card-port">~/.claude/skills/</span>
+        <span class="open-btn" style="background:#2F6FB0">浏览 →</span>
+      </div>
+    </a>
+    <a class="system-card" href="/mcp.html" style="--card-color:#0e7490">
+      <div class="card-header">
+        <div class="card-icon">🔌</div>
+        <div class="card-badges"><span class="count-badge" style="background:#0e7490" id="mcpCount">— MCP</span></div>
+      </div>
+      <div class="card-name">MCP Servers</div>
+      <div class="card-desc">Model Context Protocol 服务器配置。已接入 Chrome DevTools、GitHub、Exa 搜索、Firecrawl、KET Pipeline 等工具。</div>
+      <div class="card-tech">~/.claude.json · mcpServers</div>
+      <div class="card-footer">
+        <span class="card-port">~/.claude.json</span>
+        <span class="open-btn" style="background:#0e7490">查看 →</span>
+      </div>
+    </a>
+    <a class="system-card" href="/hooks.html" style="--card-color:#374151">
+      <div class="card-header">
+        <div class="card-icon">🪝</div>
+        <div class="card-badges"><span class="count-badge" style="background:#374151" id="hookCount">— Hooks</span></div>
+      </div>
+      <div class="card-name">Hooks</div>
+      <div class="card-desc">Claude Code 生命周期钩子。会话启动/结束、工具调用前后自动触发脚本，实现格式化、代码审查、安全拦截等自动化。</div>
+      <div class="card-tech">~/.claude/settings.json · hooks</div>
+      <div class="card-footer">
+        <span class="card-port">~/.claude/settings.json</span>
+        <span class="open-btn" style="background:#374151">查看 →</span>
+      </div>
+    </a>
+  </div>
+</div>
+
 <footer>AI Agents Hub · 本地开发环境 · 所有服务运行于 localhost</footer>
 
 <script>
@@ -126,6 +171,10 @@ async function init() {
     fetch('/api/systems').then(r => r.json()).catch(() => []),
     fetch('/api/systems/status').then(r => r.json()).catch(() => ({}))
   ]);
+  // Load tool counts
+  fetch('/api/skills').then(r=>r.json()).then(s=>{const el=document.getElementById('skillCount');if(el)el.textContent=s.length+' Skills';}).catch(()=>{});
+  fetch('/api/mcp').then(r=>r.json()).then(s=>{const el=document.getElementById('mcpCount');if(el)el.textContent=s.length+' MCP';}).catch(()=>{});
+  fetch('/api/hooks').then(r=>r.json()).then(s=>{const total=Object.values(s).reduce((n,a)=>n+a.length,0);const el=document.getElementById('hookCount');if(el)el.textContent=total+' Hooks';}).catch(()=>{});
 
   renderCards(systems, status);
 

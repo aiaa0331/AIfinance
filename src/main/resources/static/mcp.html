@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MCP Servers</title>
+  <style>
+    :root{--bg:#F7F5F0;--surface:#FFF;--surface-alt:#FBFAF7;--text:#26262B;--text-secondary:#55555F;--text-muted:#8A8A95;--border:#E4E0D8;--border-strong:#D2CDC2;--accent:#0e7490;--success:#1F7A4D;--warning:#B45309;--danger:#B42318;--shadow:0 1px 3px rgba(30,30,40,.06),0 4px 12px rgba(30,30,40,.05);}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+    header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;height:52px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10;box-shadow:var(--shadow);}
+    .back-btn{display:flex;align-items:center;gap:5px;text-decoration:none;color:var(--text-muted);font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg);}
+    .header-logo{width:28px;height:28px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:15px;}
+    .header-title{font-size:15px;font-weight:700;}
+    .header-sub{font-size:12px;color:var(--text-muted);}
+    main{max-width:900px;margin:0 auto;padding:32px 28px 60px;}
+
+    .stats-row{display:flex;gap:20px;margin-bottom:28px;}
+    .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 20px;flex:1;box-shadow:var(--shadow);}
+    .stat-num{font-size:24px;font-weight:800;color:var(--text);}
+    .stat-label{font-size:11px;color:var(--text-muted);margin-top:2px;}
+
+    .section-title{font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+
+    .server-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px 22px;margin-bottom:14px;box-shadow:var(--shadow);position:relative;overflow:hidden;}
+    .server-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+    .server-card.running::before{background:var(--success);}
+    .server-card.stopped::before{background:var(--border-strong);}
+    .server-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;}
+    .server-name{font-size:15px;font-weight:700;color:var(--text);font-family:"SF Mono","Fira Code",monospace;}
+    .server-type{font-size:11px;padding:3px 8px;border-radius:4px;font-weight:600;margin-top:3px;display:inline-block;}
+    .type-stdio{background:#EEF4FB;color:#1e40af;border:1px solid #BFDBFE;}
+    .type-http{background:#f5f3ff;color:#7c3aed;border:1px solid #ddd6fe;}
+    .status-badge{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:500;}
+    .status-badge.live{color:var(--success);}
+    .status-badge.dead{color:var(--text-muted);}
+    .sdot{width:7px;height:7px;border-radius:50%;background:currentColor;}
+    .server-cmd{font-size:12px;color:var(--text-secondary);font-family:"SF Mono","Fira Code",monospace;background:var(--bg);padding:8px 12px;border-radius:6px;border:1px solid var(--border);margin-top:6px;word-break:break-all;line-height:1.6;}
+    .server-cmd .cmd-label{color:var(--text-muted);font-size:10px;display:block;margin-bottom:3px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;}
+    .server-desc{font-size:12px;color:var(--text-secondary);margin-top:8px;line-height:1.6;}
+
+    .docs-hint{margin-top:24px;padding:14px 18px;background:var(--surface-alt);border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--text-secondary);line-height:1.7;}
+    .docs-hint code{font-family:"SF Mono","Fira Code",monospace;background:var(--bg);padding:1px 5px;border-radius:3px;border:1px solid var(--border);font-size:11px;}
+  </style>
+</head>
+<body>
+<header>
+  <a href="/index.html" class="back-btn">← Hub</a>
+  <div class="header-logo">🔌</div>
+  <div>
+    <div class="header-title">MCP Servers</div>
+    <div class="header-sub" id="headerSub">加载中…</div>
+  </div>
+</header>
+
+<main>
+  <div class="stats-row" id="statsRow"></div>
+  <div class="section-title">已配置的 MCP 服务器</div>
+  <div id="serverList"><div style="color:var(--text-muted);font-size:13px">加载中…</div></div>
+
+  <div class="docs-hint">
+    <strong>MCP 配置位置：</strong><code>~/.claude.json</code> → <code>mcpServers</code> 字段<br>
+    <strong>添加新 MCP：</strong><code>claude mcp add &lt;名称&gt; -- &lt;命令&gt;</code><br>
+    <strong>查看当前：</strong><code>claude mcp list</code>
+  </div>
+</main>
+
+<script>
+const MCP_DESCS = {
+  'chrome-devtools': '浏览器自动化 — 截图、DOM 操作、控制台日志、网络请求分析，供 Claude 直接控制 Chrome 浏览器。',
+  'exa': '高质量语义网络搜索，返回结构化结果和全文内容，比普通搜索引擎更适合 AI 消费。',
+  'firecrawl': '网页抓取与爬虫 — 结构化提取页面内容、搜索、监控，支持 JS 渲染页面。',
+  'github': '操作 GitHub 仓库 — 读写文件、管理 Issues/PR、搜索代码、创建分支。',
+  'ket-pipeline': 'KET 游戏课程平台 MCP — 生成课程、导入章节、上传文件等内部流水线操作。',
+  'pexels-search': '从 Pexels 搜索和下载免版权高质量图片素材。',
+  'context7': '实时拉取 npm/PyPI 等包的最新文档和 API 参考，避免幻觉过时的 API 用法。',
+};
+
+async function init(){
+  const r = await fetch('/api/mcp');
+  const servers = await r.json();
+  const live = servers.filter(s=>s.running).length;
+  document.getElementById('headerSub').textContent = `${servers.length} 个 MCP 服务器 · ~/.claude.json`;
+  document.getElementById('statsRow').innerHTML = `
+    <div class="stat-card"><div class="stat-num">${servers.length}</div><div class="stat-label">总计</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--success)">${live}</div><div class="stat-label">运行中</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--text-muted)">${servers.length-live}</div><div class="stat-label">按需启动</div></div>
+    <div class="stat-card"><div class="stat-num">${servers.filter(s=>s.type==='stdio').length}</div><div class="stat-label">stdio 类型</div></div>`;
+
+  document.getElementById('serverList').innerHTML = servers.map(s => {
+    const fullCmd = [s.command, ...(s.args||[])].join(' ');
+    const desc = MCP_DESCS[s.name] || '';
+    return `
+    <div class="server-card ${s.running?'running':'stopped'}">
+      <div class="server-header">
+        <div>
+          <div class="server-name">${esc(s.name)}</div>
+          <span class="server-type type-${s.type}">${s.type.toUpperCase()}</span>
+        </div>
+        <div class="status-badge ${s.running?'live':'dead'}">
+          <span class="sdot"></span>${s.running?'运行中':'按需启动'}
+        </div>
+      </div>
+      ${desc?`<div class="server-desc">${esc(desc)}</div>`:''}
+      <div class="server-cmd">
+        <span class="cmd-label">命令</span>${esc(fullCmd)}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+init();
+</script>
+</body>
+</html>
