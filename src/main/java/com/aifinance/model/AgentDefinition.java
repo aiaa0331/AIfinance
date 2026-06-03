@@ -6,6 +6,7 @@ public record AgentDefinition(
         String id,
         String displayName,
         String description,
+        String descriptionZh,
         String vertical,
         String verticalColor,
         String systemPrompt,

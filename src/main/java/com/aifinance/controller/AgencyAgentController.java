@@ -45,8 +45,9 @@ public class AgencyAgentController {
 
         // Wrap into AgentDefinition-compatible call via system prompt
         var agentDef = new AgentDefinition(
-                agent.id(), agent.name(), agent.description(), agent.category(),
-                agent.color(), agent.systemPrompt(), List.of(), "", "claude-sonnet-4-6", List.of()
+                agent.id(), agent.name(), agent.description(), agent.descriptionZh(),
+                agent.category(), agent.color(), agent.systemPrompt(),
+                List.of(), "", "claude-sonnet-4-6", List.of()
         );
 
         return anthropicService.streamChat(agentDef, request.message(), request.apiKey())

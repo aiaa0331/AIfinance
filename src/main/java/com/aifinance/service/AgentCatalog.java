@@ -33,6 +33,7 @@ public class AgentCatalog {
                 "pitch-agent",
                 "Pitch Agent",
                 "End-to-end investment banking pitch agent. Given a target company and strategic situation, pulls comps and precedents, builds a DCF and football-field valuation in Excel, and generates a branded pitch deck. Use when an MD asks for a first-draft pitch on a name.",
+                "端到端投行 Pitch 制作 Agent。给定目标公司与战略背景，自动拉取可比交易、搭建 DCF / 足球场估值模型并生成品牌化路演 PPT。适用于 MD 需要一份初稿 Pitch 时。",
                 "Investment Banking",
                 "#1e40af",
                 """
@@ -70,6 +71,7 @@ public class AgentCatalog {
                 "market-researcher",
                 "Market Researcher",
                 "Produces sector or thematic market research — industry overview, competitive landscape, trading-comps spread, and a thematic ideas shortlist — packaged as a research note. Use when an analyst asks for a primer on a sector or theme.",
+                "行业/主题研究 Agent。产出行业概览、竞争格局、可比公司估值表与投资主题股票池，最终打包成研究笔记。适用于分析师需要一份行业入门 Primer 时。",
                 "Equity Research",
                 "#166534",
                 """
@@ -108,6 +110,7 @@ public class AgentCatalog {
                 "earnings-reviewer",
                 "Earnings Reviewer",
                 "Processes an earnings event end to end — reads the call transcript and filings, updates the coverage model, and drafts the post-earnings note. Use when a covered name reports.",
+                "业绩发布全流程处理 Agent。读取电话会议记录与财报文件，更新覆盖模型，撰写业绩后研究报告草稿。适用于覆盖标的发布业绩时。",
                 "Equity Research",
                 "#166534",
                 """
@@ -143,6 +146,7 @@ public class AgentCatalog {
                 "meeting-prep-agent",
                 "Meeting Prep Agent",
                 "Builds a briefing pack before a client or prospect meeting — relationship history, holdings snapshot, market context, and a suggested agenda. Use ahead of any client meeting.",
+                "客户会议简报 Agent。会前自动整理关系历史、持仓快照、相关市场动态与建议议程，供顾问做会议准备。适用于任何客户会议前。",
                 "Wealth Management",
                 "#92400e",
                 """
@@ -175,6 +179,7 @@ public class AgentCatalog {
                 "model-builder",
                 "Model Builder",
                 "Builds DCF, LBO, three-statement, and trading-comps models from a ticker and assumption set. Use when you need a clean model from scratch.",
+                "财务模型构建 Agent。根据股票代码与假设参数，从零搭建 DCF、LBO、三表联动模型及可比公司估值表。适用于需要全新干净模型时。",
                 "Financial Analysis",
                 "#4338ca",
                 """
@@ -210,6 +215,7 @@ public class AgentCatalog {
                 "gl-reconciler",
                 "GL Reconciler",
                 "Reconciles general ledger to subledger across asset classes for a trade date — finds breaks, traces root cause, and routes the exception report for sign-off. Use for daily or month-end recon runs.",
+                "总账与子账对账 Agent。按交易日跨资产类别核查 GL 与子账差异，追溯根因并生成例外报告供主管签核。适用于日常或月末对账。",
                 "Financial Analysis",
                 "#4338ca",
                 """
@@ -244,6 +250,7 @@ public class AgentCatalog {
                 "kyc-screener",
                 "KYC Screener",
                 "Parses an onboarding document packet, runs the firm's KYC/AML rules engine, screens against sanctions and PEP lists, and flags gaps for escalation. Use for new-client onboarding or periodic refresh.",
+                "KYC/AML 尽调筛查 Agent。解析开户文件包，执行公司 KYC 规则引擎，针对制裁名单与 PEP 名单进行筛查，并标记缺口供合规升级。适用于新客户开户或定期复审。",
                 "Financial Analysis",
                 "#4338ca",
                 """
@@ -278,6 +285,7 @@ public class AgentCatalog {
                 "valuation-reviewer",
                 "Valuation Reviewer",
                 "Ingests GP valuation packages for a fund, runs them through the valuation template, and stages LP reporting. Use for quarter-end portfolio valuation review.",
+                "投资组合估值审查 Agent。处理 GP 估值文件包，代入估值模板运算，生成 NAV 瀑布图并准备 LP 报告。适用于季末组合估值审核。",
                 "Private Equity",
                 "#7e1d1d",
                 """
@@ -310,6 +318,7 @@ public class AgentCatalog {
                 "month-end-closer",
                 "Month-End Closer",
                 "Runs the month-end close for an entity — accruals, roll-forwards, and variance commentary — and stages the close package for controller sign-off.",
+                "月末关账 Agent。执行实体月末关账流程——应计项目编制、滚动结转、与预算及上期的差异说明，并整理关账包供主计长签核。",
                 "Financial Analysis",
                 "#4338ca",
                 """
@@ -343,6 +352,7 @@ public class AgentCatalog {
                 "statement-auditor",
                 "Statement Auditor",
                 "Audits a batch of pre-generated LP capital-account statements against the fund NAV pack before distribution — ties out balances, allocations, and fees, and flags discrepancies.",
+                "LP 对账单审计 Agent。在分发前将批量 LP 资本账户对账单与基金 NAV 包进行核对，校验余额、分配比例与费用，标记差异。",
                 "Private Equity",
                 "#7e1d1d",
                 """
