@@ -713,7 +713,7 @@ function renderAgentPanel() {
           </div>
         </div>
         <div class="agent-panel-desc">${a.description}</div>
-        ${a.descriptionZh ? `<div class="agent-panel-desc" style="margin-top:6px;padding:8px 10px;background:var(--surface-alt);border-radius:6px;border-left:3px solid var(--accent);font-size:12.5px;color:var(--text-secondary)">🇨🇳 ${esc(a.descriptionZh)}</div>` : ''}
+        ${a.descriptionZh ? `<div class="agent-panel-desc" style="margin-top:6px;padding:8px 10px;background:var(--surface-alt);border-radius:6px;border-left:3px solid var(--accent);font-size:12.5px;color:var(--text-secondary)">🇨🇳 ${escapeHtml(a.descriptionZh)}</div>` : ''}
         <div class="skills-row">
           ${a.skills.map(s => `<span class="skill-chip">${s}</span>`).join('')}
           ${(a.requiredMcpServers || []).map(s => `<span class="mcp-chip">mcp:${s}</span>`).join('')}
