@@ -425,6 +425,28 @@
       30% { opacity: 1; transform: translateY(-3px); }
     }
 
+    /* ── Model Selector ─────────────────────── */
+    .model-selector {
+      display: flex;
+      gap: 5px;
+      margin-bottom: 8px;
+    }
+    .model-btn {
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text-secondary);
+      transition: all .12s;
+      white-space: nowrap;
+    }
+    .model-btn:hover { border-color: var(--border-strong); }
+    .model-btn.active.claude { background: #2F6FB0; color: #fff; border-color: #2F6FB0; }
+    .model-btn.active.deepseek { background: #166534; color: #fff; border-color: #166534; }
+
     /* ── Chat Input ──────────────────────────── */
     .chat-input-area {
       padding: 12px 24px 16px;
@@ -571,6 +593,13 @@ let agents = [];
 let selectedAgent = null;
 let isStreaming = false;
 let conversationHistory = {}; // agentId → messages[]
+let selectedModel = 'claude-opus-4-8';
+
+function setModel(btn) {
+  selectedModel = btn.dataset.model;
+  document.querySelectorAll('.model-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
 
 // ── Init ────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
@@ -725,6 +754,11 @@ function renderAgentPanel() {
       </div>
 
       <div class="chat-input-area">
+        <div class="model-selector">
+          <button class="model-btn claude active" data-model="claude-opus-4-8" onclick="setModel(this)">Opus 4.8</button>
+          <button class="model-btn claude" data-model="claude-sonnet-4-6" onclick="setModel(this)">Sonnet 4.6</button>
+          <button class="model-btn deepseek" data-model="deepseek-v4-pro" onclick="setModel(this)">DeepSeek V4 Pro</button>
+        </div>
         <div class="steering-hint">
           示例指令：
           <span class="steering-example" onclick="fillExample()" id="steeringExample">${escapeHtml(a.steeringExample)}</span>
@@ -787,8 +821,8 @@ async function sendMessage() {
   if (!message || isStreaming || !selectedAgent) return;
 
   const key = document.getElementById('apiKeyInput').value.trim();
-  if (!key) {
-    alert('请先在右上角填入 Anthropic API Key');
+  if (selectedModel.startsWith('claude-') && !key) {
+    alert('使用 Claude 模型需要填写 Anthropic API Key');
     return;
   }
 
@@ -823,7 +857,7 @@ async function sendMessage() {
     const res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ agentId: selectedAgent.id, message, apiKey: key })
+      body: JSON.stringify({ agentId: selectedAgent.id, message, apiKey: key, model: selectedModel })
     });
 
     const reader = res.body.getReader();

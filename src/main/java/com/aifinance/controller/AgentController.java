@@ -4,6 +4,7 @@ import com.aifinance.model.AgentDefinition;
 import com.aifinance.model.ChatRequest;
 import com.aifinance.service.AgentCatalog;
 import com.aifinance.service.AnthropicService;
+import com.aifinance.service.OpenAICompatService;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.*;
@@ -18,10 +19,13 @@ public class AgentController {
 
     private final AgentCatalog catalog;
     private final AnthropicService anthropicService;
+    private final OpenAICompatService openAICompatService;
 
-    public AgentController(AgentCatalog catalog, AnthropicService anthropicService) {
+    public AgentController(AgentCatalog catalog, AnthropicService anthropicService,
+                           OpenAICompatService openAICompatService) {
         this.catalog = catalog;
         this.anthropicService = anthropicService;
+        this.openAICompatService = openAICompatService;
     }
 
     @GetMapping("/agents")
@@ -37,13 +41,25 @@ public class AgentController {
 
     @PostMapping(value = "/chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<ServerSentEvent<String>> chat(@RequestBody ChatRequest request) {
-        var agent = catalog.findById(request.agentId())
+        String model = request.model() != null && !request.model().isBlank()
+                ? request.model() : "claude-opus-4-8";
+
+        var baseAgent = catalog.findById(request.agentId())
                 .orElseThrow(() -> new IllegalArgumentException("Agent not found: " + request.agentId()));
 
-        return anthropicService.streamChat(agent, request.message(), request.apiKey())
-                .map(chunk -> ServerSentEvent.<String>builder()
-                        .data(chunk)
-                        .build());
+        // Rebuild with the requested model
+        var agent = new AgentDefinition(
+                baseAgent.id(), baseAgent.displayName(), baseAgent.description(),
+                baseAgent.descriptionZh(), baseAgent.vertical(), baseAgent.verticalColor(),
+                baseAgent.systemPrompt(), baseAgent.skills(), baseAgent.steeringExample(),
+                model, baseAgent.requiredMcpServers()
+        );
+
+        Flux<String> stream = model.startsWith("claude-")
+                ? anthropicService.streamChat(agent, request.message(), request.apiKey())
+                : openAICompatService.streamChat(agent, request.message(), model);
+
+        return stream.map(chunk -> ServerSentEvent.<String>builder().data(chunk).build());
     }
 
     @GetMapping("/health")
